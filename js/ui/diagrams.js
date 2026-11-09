@@ -48,14 +48,14 @@
    * cfg: { addrBits, tagBits, setBits, wordBits, ways }
    */
   function campi(cfg, addr) {
-    const parts = [['tag', cfg.tagBits], [cfg.ways === 1 ? 'linea' : 'set', cfg.setBits], ['parola', cfg.wordBits]].filter((p) => p[1] > 0);
+    const parts = [['tag', cfg.tagBits], [cfg.ways === 1 ? 'linea' : 'set', cfg.setBits], ['parola', cfg.wordBits], ['byte', cfg.byteBits || 0]].filter((p) => p[1] > 0);
     const W = 520, x0 = 20;
     const bits = addr === undefined ? null : U.bin(addr, cfg.addrBits);
     let s = '<svg viewBox="0 0 560 96" role="img" aria-label="Indirizzo di ' + cfg.addrBits + ' bit diviso in ' + parts.map((p) => p[0] + ' ' + p[1] + ' bit').join(', ') + '">';
     let x = x0, pos = 0;
     parts.forEach(([name, n], i) => {
       const w = Math.max(70, (W * n) / cfg.addrBits);
-      s += '<rect class="' + (i === 1 && parts.length === 3 ? 'box-soft' : 'box') + '" x="' + x + '" y="26" width="' + w + '" height="36" rx="4"/>' +
+      s += '<rect class="' + (i === 1 && parts.length >= 3 ? 'box-soft' : 'box') + '" x="' + x + '" y="26" width="' + w + '" height="36" rx="4"/>' +
         '<text x="' + (x + w / 2) + '" y="18" text-anchor="middle" font-weight="600">' + name + '</text>' +
         '<text class="t-mono" x="' + (x + w / 2) + '" y="49" text-anchor="middle">' + (bits ? bits.slice(pos, pos + n) : n + ' bit') + '</text>' +
         '<text class="t-muted" x="' + (x + w / 2) + '" y="80" text-anchor="middle">' + (bits ? n + ' bit' : '') + '</text>';
@@ -63,7 +63,7 @@
     });
     // Le larghezze minime possono far uscire la barra: si riscala il viewBox.
     s = s.replace('viewBox="0 0 560 96"', 'viewBox="0 0 ' + Math.max(560, x + 20) + ' 96"');
-    return fig(s + '</svg>', 'Da sinistra: il tag identifica il blocco, il campo centrale sceglie ' + (cfg.ways === 1 ? 'la linea' : 'il set') + ', gli ultimi bit la parola nel blocco.');
+    return fig(s + '</svg>', 'Da sinistra: il tag identifica il blocco, il campo centrale sceglie ' + (cfg.ways === 1 ? 'la linea' : 'il set') + ', gli ultimi bit la posizione nel blocco.');
   }
 
   /** Mappa degli argomenti: colonne per profondità nelle dipendenze. nodes: [{ id, short, deps, cls, ready }] */
@@ -95,4 +95,45 @@
   }
 
   ADE.diagrams = { gerarchia, mapping, campi, mappa };
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+// ---- Diagrammi degli altri argomenti ----
+(function (root) {
+  const D = root.ADE.diagrams;
+  const fig = (svg, caption) => '<figure>' + svg + '<figcaption>' + caption + '</figcaption></figure>';
+  const defs = '<defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>';
+  const box = (x, y, w, h, label, cls, sub) => '<rect class="' + (cls || 'box') + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="5"/><text x="' + (x + w / 2) + '" y="' + (y + h / 2 + (sub ? -2 : 5)) + '" text-anchor="middle"' + (cls === 'box-acc' ? ' class="on-acc"' : '') + '>' + label + '</text>' + (sub ? '<text class="t-muted" x="' + (x + w / 2) + '" y="' + (y + h / 2 + 14) + '" text-anchor="middle">' + sub + '</text>' : '');
+
+  D.ciclo = () => fig('<svg viewBox="0 0 560 150" role="img" aria-label="Ciclo fetch, execute, controllo interruzioni">' + defs +
+    box(20, 50, 130, 50, 'Fetch', 'box-acc') + box(215, 50, 130, 50, 'Execute') + box(410, 50, 130, 50, 'Interruzioni?', 'box-soft') +
+    '<path class="wire" d="M150 75H212" marker-end="url(#ah2)"/><path class="wire" d="M345 75H407" marker-end="url(#ah2)"/><path class="wire" d="M475 100V130H85V103" marker-end="url(#ah2)"/>' +
+    '<text class="t-muted" x="85" y="40" text-anchor="middle">PC → IR, PC+1</text><text class="t-muted" x="475" y="40" text-anchor="middle">se sì: salva contesto, gestore</text></svg>',
+    'A ogni giro: prelievo, esecuzione, poi controllo delle interruzioni pendenti.');
+
+  D.bus = () => fig('<svg viewBox="0 0 560 190" role="img" aria-label="CPU, memoria e I/O collegati alle linee dati, indirizzi e controllo del bus">' + defs +
+    box(40, 10, 120, 44, 'CPU', 'box-acc') + box(220, 10, 120, 44, 'Memoria') + box(400, 10, 120, 44, 'I/O') +
+    ['Controllo', 'Indirizzi', 'Dati'].map((n, i) => '<rect class="box-soft" x="20" y="' + (86 + i * 34) + '" width="520" height="22" rx="4"/><text x="30" y="' + (102 + i * 34) + '" class="t-muted">' + n + '</text>').join('') +
+    [100, 280, 460].map((x) => '<path class="wire" d="M' + x + ' 54V176"/>').join('') + '</svg>',
+    'Tutti i moduli condividono le stesse linee: un solo dispositivo alla volta può trasmettere.');
+
+  D.qpi = () => {
+    const core = (x, y, n) => box(x, y, 80, 44, 'Core ' + n, 'box-acc');
+    return fig('<svg viewBox="0 0 560 250" role="img" aria-label="Quattro core collegati tra loro con link QPI, ognuno con la sua DRAM, e due I/O Hub">' + defs +
+      box(230, 4, 100, 34, 'I/O Hub', 'box-soft') + box(230, 212, 100, 34, 'I/O Hub', 'box-soft') +
+      core(150, 70, 'A') + core(330, 70, 'B') + core(150, 140, 'C') + core(330, 140, 'D') +
+      box(20, 75, 70, 34, 'DRAM') + box(470, 75, 70, 34, 'DRAM') + box(20, 145, 70, 34, 'DRAM') + box(470, 145, 70, 34, 'DRAM') +
+      '<path class="wire-acc" d="M230 92H330M230 162H330M190 114V140M370 114V140M230 108L330 146M330 108L230 146M200 70L260 38M360 70L300 38M200 184L260 212M360 184L300 212"/>' +
+      '<path class="wire" d="M90 92H150M90 162H150M410 92H470M410 162H470"/>' +
+      '<text class="t-muted" x="280" y="60" text-anchor="middle">QPI</text><text class="t-muted" x="120" y="86" text-anchor="middle">bus</text></svg>',
+      'Linee spesse: link QPI punto a punto tra core e verso gli I/O Hub. Linee sottili: memory bus verso la DRAM di ciascun core. Dagli I/O Hub ai dispositivi si usa PCI Express.');
+  };
+
+  D.hamming = () => {
+    const names = ['D8', 'D7', 'D6', 'D5', 'C8', 'D4', 'D3', 'D2', 'C4', 'D1', 'C2', 'C1'];
+    let s = '<svg viewBox="0 0 560 96" role="img" aria-label="Disposizione dei 12 bit di una parola di Hamming per 8 bit di dati">';
+    names.forEach((n, i) => { const x = 14 + i * 44.5, chk = n[0] === 'C';
+      s += '<text class="t-muted" x="' + (x + 20) + '" y="16" text-anchor="middle">' + (12 - i) + '</text><rect class="' + (chk ? 'box-acc' : 'box') + '" x="' + x + '" y="24" width="40" height="34" rx="4"/><text x="' + (x + 20) + '" y="46" text-anchor="middle"' + (chk ? ' class="on-acc"' : '') + '>' + n + '</text>' +
+        '<text class="t-muted t-mono" x="' + (x + 20) + '" y="76" text-anchor="middle">' + (12 - i).toString(2).padStart(4, '0') + '</text>'; });
+    return fig(s + '</svg>', 'Posizioni da 12 a 1. I controlli (evidenziati) stanno nelle potenze di 2. C4 copre le posizioni il cui numero binario ha il bit di peso 4 a 1: 5, 6, 7, 12.');
+  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

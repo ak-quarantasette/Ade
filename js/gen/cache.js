@@ -7,15 +7,22 @@
   const ADE = (root.ADE = root.ADE || {});
   const U = ADE.util;
 
-  /** Calcola linee, set e dimensione dei campi. Parola = 1 byte (vedi ASSUNZIONI.md, A3). */
+  /**
+   * Calcola linee, set e dimensione dei campi.
+   * Se la parola è più grande di un byte (wordBytes > 1) lo spiazzamento nel blocco si divide in
+   * "parola" (quale parola del blocco) e "byte" (quale byte della parola): vedi ASSUNZIONI.md, A3.
+   */
   function makeConfig(p) {
-    const cfg = Object.assign({ addrBits: 12, cacheBytes: 16, blockBytes: 4, ways: 1, repl: 'LRU', write: 'back' }, p);
+    const cfg = Object.assign({ addrBits: 12, cacheBytes: 16, blockBytes: 4, wordBytes: 1, ways: 1, repl: 'LRU', write: 'back' }, p);
     cfg.lines = cfg.cacheBytes / cfg.blockBytes;
     cfg.sets = cfg.lines / cfg.ways;
     if (!Number.isInteger(cfg.lines) || !Number.isInteger(cfg.sets) || cfg.sets < 1) throw new Error('configurazione non valida');
-    cfg.wordBits = U.log2(cfg.blockBytes);
+    cfg.offBits = U.log2(cfg.blockBytes);          // spiazzamento totale nel blocco
+    cfg.byteBits = U.log2(cfg.wordBytes);
+    cfg.wordBits = cfg.offBits - cfg.byteBits;
+    if (cfg.wordBits < 0) throw new Error('blocco più piccolo della parola');
     cfg.setBits = U.log2(cfg.sets);
-    cfg.tagBits = cfg.addrBits - cfg.setBits - cfg.wordBits;
+    cfg.tagBits = cfg.addrBits - cfg.setBits - cfg.offBits;
     if (cfg.tagBits < 0) throw new Error('indirizzo troppo corto');
     return cfg;
   }
@@ -23,8 +30,8 @@
   function split(cfg, addr) {
     return {
       word: addr & (cfg.blockBytes - 1),
-      set: (addr >> cfg.wordBits) & (cfg.sets - 1),
-      tag: addr >> (cfg.wordBits + cfg.setBits),
+      set: (addr >> cfg.offBits) & (cfg.sets - 1),
+      tag: addr >> (cfg.offBits + cfg.setBits),
       blockAddr: addr - (addr & (cfg.blockBytes - 1)),
     };
   }
@@ -67,7 +74,7 @@
           way = 0;
           for (let w = 1; w < cfg.ways; w++) if (set[w][key] < set[way][key]) way = w;
           const old = set[way];
-          const oldBlock = ((old.tag << cfg.setBits) | f.set) << cfg.wordBits;
+          const oldBlock = ((old.tag << cfg.setBits) | f.set) << cfg.offBits;
           step.evicted = { tag: old.tag, blockAddr: oldBlock, dirty: old.dirty, data: old.data.slice() };
           if (old.dirty) {
             // Write-back: si riscrive in memoria tutto il blocco; "changed" segna i byte davvero diversi.
@@ -116,7 +123,7 @@
     const tagS = a.slice(0, cfg.tagBits), setS = a.slice(cfg.tagBits, cfg.tagBits + cfg.setBits), wS = a.slice(cfg.tagBits + cfg.setBits);
     const where = cfg.ways === 1 ? 'linea ' + st.set : 'set ' + st.set;
     out.push('Indirizzo ' + U.hex(st.addr, 3) + ' = ' + tagS + (setS ? ' | ' + setS : '') + ' | ' + wS +
-      ' → tag ' + tagS + (setS ? ', ' + where : '') + ', parola ' + st.word + ' del blocco ' + U.hex(st.blockAddr, 3) + '.');
+      ' → tag ' + tagS + (setS ? ', ' + where : '') + ', byte ' + st.word + ' del blocco ' + U.hex(st.blockAddr, 3) + '.');
     if (st.hit) {
       out.push('Hit: ' + (cfg.ways === 1 ? 'la linea ' + st.set : 'la linea ' + st.way + ' del set ' + st.set) + ' è valida e ha lo stesso tag.');
     } else {
@@ -132,7 +139,7 @@
       out.push('Si carica il blocco ' + U.hex(st.blockAddr, 3) + ': [' + st.loaded.map((b) => U.hex(b)).join(' ') + ']' + (st.op === 's' ? ' (write allocate: prima si carica, poi si scrive).' : '.'));
     }
     if (st.op === 's') {
-      out.push('Scrittura di ' + U.hex(st.data) + ' nella parola ' + st.word + ': ' +
+      out.push('Scrittura di ' + U.hex(st.data) + ' nel byte ' + st.word + ' del blocco: ' +
         (cfg.write === 'back' ? 'solo in cache, la linea diventa sporca (*).' : 'in cache e subito in memoria (write-through).'));
     }
     return out;
@@ -153,8 +160,10 @@
     // almeno 2 hit, almeno 1 rimpiazzo, e con write-back almeno 1 riscrittura in memoria.
     for (let attempt = 0; attempt < 500; attempt++) {
       const c = opts.blockBytes ? { blockBytes: opts.blockBytes, ways: opts.ways } : rnd.pick(combos);
+      // Una volta su quattro la parola è più grande di un byte, come nel compitino 2025.
+      const wordBytes = opts.wordBytes || (c.blockBytes >= 4 && rnd.next() < 0.25 ? rnd.pick(c.blockBytes === 8 ? [2, 4] : [2]) : 1);
       const cfg = makeConfig({
-        blockBytes: c.blockBytes, ways: c.ways,
+        blockBytes: c.blockBytes, ways: c.ways, wordBytes,
         repl: opts.repl || (c.ways === 1 ? 'FIFO' : rnd.pick(['LRU', 'FIFO'])),
         write: opts.write || rnd.pick(['back', 'back', 'through']),
       });
@@ -185,7 +194,7 @@
   }
 
   function traceText(cfg) {
-    return 'Si assuma che la dimensione di parola coincida con un byte, e la presenza di una cache di ampiezza ' +
+    return 'Si assuma che la dimensione di parola coincida con ' + (cfg.wordBytes === 1 ? 'un byte' : cfg.wordBytes + ' byte') + ', e la presenza di una cache di ampiezza ' +
       cfg.cacheBytes + 'B, dimensione di blocco ' + cfg.blockBytes + 'B, inizialmente vuota, e ad ' + policyText(cfg) +
       '. Gli indirizzi sono di ' + cfg.addrBits + ' bit. Si mostri come cambiano il contenuto della cache e quello della memoria.';
   }
@@ -221,10 +230,14 @@
       res.fields.push({ label, ok, got, exp, why });
     };
     if (from === 0) {
-      chk('bit di parola', answers.word, cfg.wordBits, 'Il blocco è di ' + cfg.blockBytes + 'B = 2^' + cfg.wordBits + ' byte, e la parola è un byte: servono ' + cfg.wordBits + ' bit per scegliere la parola nel blocco.');
+      if (cfg.wordBytes === 1) chk('bit di parola', answers.word, cfg.wordBits, 'Il blocco è di ' + cfg.blockBytes + 'B = 2^' + cfg.wordBits + ' byte, e la parola è un byte: servono ' + cfg.wordBits + ' bit per scegliere la parola nel blocco.');
+      else {
+        chk('bit di parola', answers.word, cfg.wordBits, 'Il blocco contiene ' + cfg.blockBytes + 'B / ' + cfg.wordBytes + 'B = ' + (cfg.blockBytes / cfg.wordBytes) + ' parole = 2^' + cfg.wordBits + ': servono ' + cfg.wordBits + ' bit per scegliere la parola.');
+        chk('bit di byte', answers.byte, cfg.byteBits, 'La parola è di ' + cfg.wordBytes + ' byte = 2^' + cfg.byteBits + ': gli ultimi ' + cfg.byteBits + ' bit indicano il byte dentro la parola.');
+      }
       chk(cfg.ways === 1 ? 'bit di linea' : 'bit di set', answers.set, cfg.setBits,
         'Linee = ' + cfg.cacheBytes + 'B / ' + cfg.blockBytes + 'B = ' + cfg.lines + (cfg.ways > 1 ? '; set = ' + cfg.lines + ' / ' + cfg.ways + ' vie = ' + cfg.sets : '') + ' = 2^' + cfg.setBits + '.');
-      chk('bit di tag', answers.tag, cfg.tagBits, 'Tag = bit totali − altri campi = ' + cfg.addrBits + ' − ' + cfg.setBits + ' − ' + cfg.wordBits + ' = ' + cfg.tagBits + '.');
+      chk('bit di tag', answers.tag, cfg.tagBits, 'Tag = bit totali − altri campi = ' + cfg.addrBits + ' − ' + cfg.setBits + ' − ' + cfg.offBits + ' = ' + cfg.tagBits + '.');
       chk(cfg.ways === 1 ? 'numero di linee' : 'numero di set', answers.sets, cfg.sets, 'Vedi sopra: ' + cfg.sets + '.');
     }
     sim.steps.forEach((st, i) => {
@@ -242,7 +255,7 @@
       if (!hitOk) errs.push('Hit/miss: era ' + (st.hit ? 'hit' : 'miss') + '. ' + (st.hit
         ? 'Il blocco ' + U.hex(st.blockAddr, 3) + ' era già in cache: confronta il tag con quello della linea, non l\'indirizzo intero.'
         : (cfg.ways === 1 ? 'La linea ' + st.set + ' non conteneva' : 'Nessuna linea del set ' + st.set + ' conteneva') + ' questo tag in quel momento.'));
-      if (!setOk) errs.push((cfg.ways === 1 ? 'Linea' : 'Set') + ': era ' + st.set + '. Si legge dai ' + cfg.setBits + ' bit che stanno tra tag e parola.');
+      if (!setOk) errs.push((cfg.ways === 1 ? 'Linea' : 'Set') + ': era ' + st.set + '. Si legge dai ' + cfg.setBits + ' bit che stanno subito dopo il tag.');
       if (!wayOk) errs.push('Linea nel set: era ' + st.way + '. ' + (st.hit ? 'È la linea che contiene già il blocco.' : st.usedFree ? 'Tra le linee libere si prende quella di indice minore.' : cfg.repl + ' sceglie ' + (cfg.repl === 'LRU' ? 'la linea usata meno di recente (conta anche l\'ultimo hit).' : 'la linea caricata per prima (gli hit non contano).')));
       if (!memOk) errs.push('Memoria: ' + (got === null ? 'formato non riconosciuto (usa M[ind]=byte, separati da virgola). ' : '') + 'attesa ' + memStr(st) + '. ' + (cfg.write === 'back'
         ? (full.length ? 'Qui viene rimpiazzata una linea sporca, quindi il suo blocco torna in memoria.' : 'Con write-back la memoria cambia solo quando si rimpiazza una linea sporca.')

@@ -123,6 +123,17 @@
     ],
   };
 
+  // Allineamento al formato comune degli argomenti (vedi course.define).
+  course.topics.find((t) => t.id === 'cache').ready = true;
+  course.open.cache.forEach((o) => { o.topic = 'cache'; });
+  const mq = (q, opts, ok, why, src) => ({ id: 'mcq-cache-' + (course.pretests.cache.length + extra.length + 1), topic: 'cache', q, opts, ok, why, src });
+  const extra = [];
+  extra.push(mq('Quale tra queste NON è una politica di rimpiazzo dei blocchi di cache?', ['LRU', 'FIFO', 'Write-back', 'LFU', 'Casuale'], 2, 'Write-back è una politica di scrittura, non di rimpiazzo.', G2 + '4-5'));
+  extra.push(mq('Quale affermazione sull\'associazione completa è falsa?', ['Un blocco può andare in qualunque linea', 'Ha la massima efficienza di allocazione', 'La verifica di hit/miss è la più veloce fra le tre tecniche', 'Richiede una tabella di tag per tutte le linee', 'Nessuna: sono tutte vere'], 2, 'La ricerca del tag su tutte le linee è onerosa: è lo svantaggio principale.', G1 + '11-13'));
+  extra.push(mq('Con tempo di accesso in cache 2 ns, tempo in caso di miss 50 ns e probabilità di hit 0,9, quanto vale il tempo medio di accesso?', ['6,8 ns', '5,2 ns', '26 ns', '45,2 ns', 'nessuna delle altre'], 0, 'Ta = 2·0,9 + 50·0,1 = 1,8 + 5 = 6,8 ns.', G1 + '6'));
+  extra.push(mq('Un miss che si verifica perché due blocchi usati a turno sono mappati sulla stessa linea è un miss…', ['di primo accesso', 'per capacità insufficiente', 'per conflitto', 'di scrittura', 'nessuna delle altre'], 2, 'Più blocchi mappati sullo stesso gruppo: miss per conflitto.', G2 + '7'));
+  course.mcq.cache = course.pretests.cache.map((q) => Object.assign(q, { topic: 'cache' })).concat(extra);
+
   course.generators.push(
     { id: 'gen:cache-traccia', topic: 'cache', sub: 'traccia', title: 'Evoluzione di cache e memoria', desc: 'L\'esercizio da 8 punti del compitino.', kind: 'ex' },
     { id: 'gen:cache-campi', topic: 'cache', sub: 'campi', title: 'Campi dell\'indirizzo', desc: 'Tag, set e parola da dimensioni di cache, blocco e memoria.', kind: 'ex' }

@@ -121,3 +121,22 @@ summary { cursor: pointer; font-weight: 600; }
 @media (prefers-reduced-motion: no-preference) { .progress i { transition: width .2s; } }
 @media print { header.top, .row, button { display: none; } }
 main:focus { outline: none; }
+
+/* Selettore di fase: la divisione tra primo e secondo compitino è sempre visibile. */
+.phase { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.phase button { border: 0; border-radius: 0; padding: .35rem .8rem; font-size: .9rem; color: var(--muted); background: var(--surface); }
+.phase button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+:root[data-phase="2"] { --accent: #7a3fa0; }
+:root[data-phase="2"][data-theme="dark"] { --accent: #c9a2ea; }
+@media (prefers-color-scheme: dark) { :root[data-phase="2"]:not([data-theme="light"]) { --accent: #c9a2ea; } }
+.phasetag { margin: 0 0 .4rem; }
+.s-phase1, .s-phase2 { background: var(--accent); color: var(--accent-text); }
+header.top .bar + .bar { padding-top: 0; }
+input.ans { width: 14rem; max-width: 100%; font-family: var(--mono); }
+fieldset.q { border: 0; padding: 0; margin: .6rem 0; }
+fieldset.q legend { font-weight: 600; margin-bottom: .4rem; }
+.clock { position: sticky; top: 0; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: .4rem .8rem; margin-bottom: .8rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+.clock.late { border-color: var(--bad); color: var(--bad); }
+table.pipe td, table.pipe th { text-align: center; padding: .2rem .35rem; font-family: var(--mono); font-size: .8rem; border: 1px solid var(--line); white-space: nowrap; }
+table.pipe td:first-child, table.pipe th:first-child { text-align: left; }
+table.pipe td.st { color: var(--bad); }

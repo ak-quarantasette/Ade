@@ -13,11 +13,12 @@
     return {
       version: VERSION,
       updatedAt: null,
-      settings: { theme: 'auto', examDate: '2026-11-18', phase2Date: null, newPerDay: 15 },
+      settings: { theme: 'auto', phase: 1, examDate: '2026-11-18', phase2Date: null, newPerDay: 15 },
       items: {},     // id -> stato SM-2 (carte e generatori di esercizi)
       reviews: [],   // registro di ogni risposta: { d, kind, id, topic, ok, conf }
       errors: [],    // quaderno degli errori
       pretest: {},   // topic -> { d, score }
+      exams: [],     // simulazioni d'esame: { d, phase, score, max, byTopic }
     };
   }
 
@@ -29,9 +30,15 @@
     const st = Object.assign(base, raw);
     st.settings = Object.assign(defaultState().settings, raw.settings || {});
     st.version = VERSION;
-    for (const k of ['reviews', 'errors']) if (!Array.isArray(st[k])) st[k] = [];
+    for (const k of ['reviews', 'errors', 'exams']) if (!Array.isArray(st[k])) st[k] = [];
     for (const k of ['items', 'pretest']) if (!st[k] || typeof st[k] !== 'object') st[k] = {};
     return st;
+  }
+
+  /** Data d'esame della fase a cui appartiene un elemento (carta o esercizio): limita gli intervalli. */
+  function examDateFor(state, item) {
+    const phase = ADE.course && item && item.topic ? ADE.course.phaseOf(item.topic) : 1;
+    return phase === 2 ? state.settings.phase2Date : state.settings.examDate;
   }
 
   function log(state, entry) {
@@ -41,7 +48,7 @@
 
   /** Registra la risposta a una flashcard e aggiorna lo scheduler. q: 1/3/4/5, conf: 1..5. */
   function recordCard(state, card, q, conf, today) {
-    state.items[card.id] = S.review(state.items[card.id], q, today, { examDate: state.settings.examDate });
+    state.items[card.id] = S.review(state.items[card.id], q, today, { examDate: examDateFor(state, card) });
     log(state, { d: today, kind: 'card', id: card.id, topic: card.topic, ok: q >= 3 ? 1 : 0, conf });
     return state.items[card.id];
   }
@@ -49,7 +56,7 @@
   /** Registra un esercizio (score 0..1). Anche i generatori hanno un loro intervallo. */
   function recordExercise(state, ex, score, conf, today) {
     const q = score >= 0.9 ? 4 : score >= 0.6 ? 3 : 1;
-    state.items[ex.id] = S.review(state.items[ex.id], q, today, { examDate: state.settings.examDate });
+    state.items[ex.id] = S.review(state.items[ex.id], q, today, { examDate: examDateFor(state, ex) });
     log(state, { d: today, kind: ex.kind || 'ex', id: ex.id, topic: ex.topic, ok: +score.toFixed(2), conf });
     return state.items[ex.id];
   }
@@ -79,6 +86,12 @@
     else { e.wins = 0; e.due = U.addDays(today, 1); }
     state.updatedAt = new Date().toISOString();
     return e;
+  }
+
+  /** Registra una simulazione d'esame conclusa. */
+  function recordExam(state, exam, today) {
+    state.exams.push(Object.assign({ d: today }, exam));
+    state.updatedAt = new Date().toISOString();
   }
 
   /** Carte in scadenza oggi e carte mai viste (limitate da newPerDay). */
@@ -173,7 +186,7 @@
   }
 
   ADE.state = {
-    VERSION, ERROR_KINDS, defaultState, normalize, recordCard, recordExercise, recordPretest,
+    VERSION, ERROR_KINDS, defaultState, normalize, examDateFor, recordExam, recordCard, recordExercise, recordPretest,
     addError, retryError, queue, interleave, mastery, calibration, illusions, accuracy, streak,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

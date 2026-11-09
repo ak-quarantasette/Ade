@@ -107,21 +107,21 @@ test('generatore traccia: 300 semi, soluzioni coerenti e autocorrezione a punteg
     const again = C.genTrace(seed);
     assert.deepEqual(ex.accesses, again.accesses, 'stesso seme, stesso esercizio');
     const { cfg, sim } = ex;
-    assert.equal(cfg.tagBits + cfg.setBits + cfg.wordBits, 12);
+    assert.equal(cfg.tagBits + cfg.setBits + cfg.wordBits + cfg.byteBits, 12);
     // Invariante: a fine sequenza, memoria + linee sporche = memoria che si otterrebbe scrivendo direttamente.
     const direct = Object.assign({}, ex.memory);
     ex.accesses.forEach((a) => { if (a.op === 's') direct[a.addr] = a.data; });
     const eff = Object.assign({}, sim.memory);
     sim.steps[sim.steps.length - 1].after.forEach((set, s) => set.forEach((l) => {
       if (!l.valid) return;
-      const base = ((l.tag << cfg.setBits) | s) << cfg.wordBits;
+      const base = ((l.tag << cfg.setBits) | s) << cfg.offBits;
       l.data.forEach((b, k) => { eff[base + k] = b; });
       if (cfg.write === 'through') assert.equal(l.dirty, false);
     }));
     assert.deepEqual(eff, direct, 'seme ' + seed);
     // Ogni lettura in hit vede l'ultimo valore scritto.
     // La risposta corretta deve ottenere il massimo; una risposta sbagliata no.
-    const answers = { tag: cfg.tagBits, set: cfg.setBits, word: cfg.wordBits, sets: cfg.sets,
+    const answers = { tag: cfg.tagBits, set: cfg.setBits, word: cfg.wordBits, byte: cfg.byteBits, sets: cfg.sets,
       steps: sim.steps.map((st) => ({ hit: st.hit, set: st.set, way: st.way, mem: C.memStr(st).startsWith('nessuna') ? '/' : C.memStr(st) })) };
     assert.equal(C.gradeTrace(ex, answers).score, 1, 'seme ' + seed);
     answers.steps[0].hit = !answers.steps[0].hit;
@@ -146,4 +146,18 @@ test('generatore campi: 300 semi, somma dei campi e spiegazione coerenti', () =>
     assert.equal(C.gradeFields(ex, s).score, 1);
     assert.equal(C.gradeFields(ex, { tag: s.tag + 1, set: s.set, word: s.word, addr: s.addr + 1 }).points, 2);
   }
+});
+
+test('parola più grande di un byte: campi parola e byte separati (esercizio 8bis degli appunti)', () => {
+  // Parola di 4 byte, blocco di 2 parole, cache 32B a 2 vie, indirizzi di 12 bit:
+  // tag 8, set 1, "word 3, di cui gli ultimi 2 indicano la posizione del byte nella parola".
+  const c = C.makeConfig({ cacheBytes: 32, blockBytes: 8, wordBytes: 4, ways: 2 });
+  assert.deepEqual([c.tagBits, c.setBits, c.wordBits, c.byteBits, c.sets], [8, 1, 1, 2, 2]);
+  // Stessa cache con parola di un byte (esercizio 8): blocco 4B → tag 8, set 2, parola 2.
+  const d = C.makeConfig({ cacheBytes: 32, blockBytes: 4, ways: 2 });
+  assert.deepEqual([d.tagBits, d.setBits, d.wordBits, d.byteBits, d.sets], [8, 2, 2, 0, 4]);
+  // Il generatore produce davvero anche esercizi con parola > 1 byte, e li corregge.
+  let multi = 0;
+  for (let seed = 1; seed <= 200; seed++) if (C.genTrace(seed).cfg.wordBytes > 1) multi++;
+  assert.ok(multi > 10 && multi < 120, 'esercizi con parola > 1 byte: ' + multi);
 });
