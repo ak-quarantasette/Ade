@@ -300,7 +300,7 @@
       g.steps.forEach((s) => { const tr = $('[data-row="' + s.i + '"]'); tr.className = s.ok ? 'right' : 'wrong'; });
       const wrongF = g.fields.filter((f) => !f.ok), wrongS = g.steps.filter((s) => !s.ok);
       const alt = C.simulate(C.makeConfig(Object.assign({}, cfg, { write: cfg.write === 'back' ? 'through' : 'back' })), ex.memory, ex.accesses);
-      $('#res').innerHTML = '<h2>Correzione: ' + g.points + ' punti su ' + g.max + ' (' + pct(g.score) + ')</h2>' +
+      $('#res').innerHTML = '<h2>Correzione: ' + pct(g.score) + '</h2><p class="muted">Un passo conta solo se è giusto in ogni parte. Risposte singole giuste: ' + g.points + ' su ' + g.max + '.</p>' +
         (conf >= 4 && g.score < 0.6 ? '<p class="msg warn">Sicurezza ' + conf + '/5 con ' + pct(g.score) + ' di risposte giuste: qui la sensazione di sapere ti sta ingannando.</p>' : '') +
         (wrongF.length ? '<h3>Campi</h3>' + wrongF.map((f) => '<p class="msg bad"><strong>' + f.label + ':</strong> hai scritto ' + esc(f.got || '–') + ', era ' + f.exp + '. ' + esc(f.why) + '</p>').join('') : '') +
         (wrongS.length ? '<h3>Passi sbagliati</h3>' + wrongS.map((s) => '<div class="msg bad"><strong>Passo ' + (s.i + 1) + '</strong><ul>' + s.errs.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul></div>').join('') : (wrongF.length ? '' : '<p class="msg ok">Tutto corretto.</p>')) +
