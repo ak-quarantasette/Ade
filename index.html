@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AdE Studio</title>
+  <meta name="description" content="Sistema di studio personale per Architettura degli Elaboratori: richiamo attivo, ripetizione distanziata, esercizi con correzione passo-passo.">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    // Applica il tema prima del primo disegno, per evitare il lampo chiaro/scuro.
+    try {
+      var t = JSON.parse(localStorage.getItem('ade-state-v1') || '{}').settings;
+      if (t && (t.theme === 'light' || t.theme === 'dark')) document.documentElement.setAttribute('data-theme', t.theme);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Vai al contenuto</a>
+  <header class="top">
+    <div class="bar">
+      <a class="brand" href="#/">AdE Studio</a>
+      <nav class="main" aria-label="Sezioni" id="nav"></nav>
+      <button class="quiet" id="theme" type="button" aria-label="Cambia tema">Tema</button>
+    </div>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <noscript><p style="padding:16px">Il sito ha bisogno di JavaScript (tutto il codice è locale, nessuna connessione richiesta).</p></noscript>
+
+  <!-- Script classici, in ordine di dipendenza. Nessun CDN, nessun modulo ES: funziona da file://. -->
+  <script src="js/core/util.js"></script>
+  <script src="js/core/scheduler.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/core/plan.js"></script>
+  <script src="js/gen/cache.js"></script>
+  <script src="js/data/course.js"></script>
+  <script src="js/data/cache.js"></script>
+  <script src="js/ui/diagrams.js"></script>
+  <script src="js/ui/app.js"></script>
+</body>
+</html>

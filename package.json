@@ -1,0 +1,8 @@
+{
+  "name": "ade-studio",
+  "private": true,
+  "description": "Sistema di studio per Architettura degli Elaboratori (sito statico, nessuna dipendenza)",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
