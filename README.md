@@ -7,8 +7,8 @@ In alto c'è il selettore **Primo compitino / Secondo compitino**. Tutto ciò ch
 
 | | Primo compitino | Secondo compitino |
 |---|---|---|
-| Argomenti | concetti base, notazione, componenti e interruzioni, bus, QPI, cache, memorie interne e Hamming, dischi/RAID/CD-ROM, SSD, gestione I/O | aritmetica, IEEE 754, linguaggio macchina, indirizzamento, processore, pipeline, RISC/CISC, multicore |
-| Esercizi generati | campi dell'indirizzo, traccia della cache, Hamming, disco, conversioni | complemento a 2, IEEE 754, cicli risparmiati, pipeline con forwarding |
+| Argomenti | concetti base, notazione, componenti e interruzioni, bus, QPI, cache, memorie interne e Hamming, dischi/RAID/CD-ROM, SSD, gestione I/O | aritmetica, IEEE 754, linguaggio macchina, indirizzamento, processore, pipeline, RISC/CISC, RISC-V, multicore |
+| Esercizi generati | campi dell'indirizzo, traccia della cache, Hamming, disco (tempi, byte e settori, scheduling), conversioni | complemento a 2, IEEE 754, virgola mobile ridotta, cicli risparmiati, pipeline con forwarding, tempo di ciclo e speedup |
 | Data | 18 novembre 2026 | da impostare in Dati |
 
 ## Aprire il sito
@@ -32,7 +32,7 @@ I progressi restano nel browser (localStorage). Browser o dispositivi diversi ha
 ```bash
 npm test
 ```
-Richiede solo Node 18 o superiore. I test verificano scheduler, stato, piano, completezza dei contenuti, e che i generatori riproducano le soluzioni del corso: esercizi cache 1-5, domande 2, 3 e 8 del primo compitino 2025, esercizi 2, 3 e 8 dell'esempio di secondo compitino, più 300 esercizi casuali per ogni generatore.
+Richiede solo Node 18 o superiore. I test verificano scheduler, stato, piano, completezza dei contenuti, e che i generatori riproducano le soluzioni del corso: esercizi cache 1-5, domande 2, 3 e 8 del primo compitino 2025, esercizi 2, 3 e 8 dell'esempio di secondo compitino, undici esercizi risolti delle raccolte del docente (dischi, Hamming, virgola mobile, pipeline), più centinaia di esercizi casuali per ogni generatore.
 
 ## Documenti
 `METODO.md` (tecniche di studio e limiti), `ASSUNZIONI.md` (cosa è stato assunto), `GAPS.md` (cosa manca), `CLAUDE.md` (regole del progetto).

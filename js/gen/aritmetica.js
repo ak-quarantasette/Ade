@@ -131,3 +131,41 @@
 
   ADE.aritmetica = { toC2, fromC2, genC2, gradeC2, encodeIEEE, decodeIEEE, genIEEE, gradeIEEE };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
+
+// ---- Virgola mobile in formato ridotto (Esercizi del docente: 3 bit di esponente, 4 di mantissa) ----
+(function (root) {
+  const ADE = root.ADE, U = ADE.util, A = ADE.aritmetica;
+  const it = (x) => String(x).replace('.', ',');
+  /** Valore di una sequenza segno | k bit esponente | m bit mantissa. Nessun valore speciale: come negli esercizi del docente. */
+  function miniValue(bits, k) { const s = bits[0] === '1' ? -1 : 1, e = parseInt(bits.slice(1, 1 + k), 2) - (2 ** (k - 1) - 1), f = bits.slice(1 + k); return s * (1 + parseInt(f, 2) / 2 ** f.length) * 2 ** e; }
+  /** Codifica con troncamento della mantissa ("approssimato" nelle soluzioni del docente). */
+  function miniEncode(x, k, m) {
+    const bias = 2 ** (k - 1) - 1; let a = Math.abs(x), e = 0;
+    while (a >= 2) { a /= 2; e++; } while (a < 1) { a *= 2; e--; }
+    return (x < 0 ? '1' : '0') + U.bin(e + bias, k) + U.bin(Math.floor((a - 1) * 2 ** m), m);
+  }
+  function genMini(seed, type) {
+    const rnd = U.rng(seed), k = 3, m = 4, bias = 3;
+    type = type || rnd.pick(['decodifica', 'codifica']);
+    const bits = String(rnd.int(0, 1)) + U.bin(rnd.int(1, 6), k) + U.bin(rnd.int(0, 15), m);
+    const x = miniValue(bits, k), e = parseInt(bits.slice(1, 4), 2), f = bits.slice(4);
+    const ex = { kind: 'mini', type, seed, k, m, bits, x };
+    const fmt = bits[0] + ' ' + bits.slice(1, 4) + ' ' + f;
+    if (type === 'decodifica') {
+      ex.text = 'Con 1 bit di segno, 3 bit per l\'esponente e 4 bit per la mantissa, quale numero rappresenta la configurazione ' + bits + ' ?';
+      ex.steps = ['Polarizzazione: 2^(k−1) − 1 = 2^2 − 1 = 3.', 'Campi: ' + fmt + ' → segno ' + (bits[0] === '1' ? 'negativo' : 'positivo') + ', esponente ' + e + ' − 3 = ' + (e - bias) + ', mantissa 1,' + f + '.',
+        'Valore: ' + (bits[0] === '1' ? '−' : '+') + '1,' + f + ' · 2^' + (e - bias) + ' = ' + it(x) + '.'];
+    } else {
+      ex.text = 'Con 1 bit di segno, 3 bit per l\'esponente e 4 bit per la mantissa, dare la rappresentazione in virgola mobile di ' + it(x) + '.';
+      ex.steps = ['In binario e normalizzato: ' + (x < 0 ? '−' : '') + '1,' + f + ' · 2^' + (e - bias) + '.', 'Esponente polarizzato: ' + (e - bias) + ' + 3 = ' + e + ' = ' + bits.slice(1, 4) + '.', 'Mantissa (senza l\'1 implicito): ' + f + '. Segno: ' + bits[0] + '.', 'Risultato: ' + fmt + '.'];
+    }
+    return ex;
+  }
+  function gradeMini(ex, v) {
+    if (ex.type === 'decodifica') { const got = parseFloat(String(v.a || '').replace(',', '.').replace('−', '-')), ok = got === ex.x;
+      return { score: ok ? 1 : 0, items: [{ label: 'Valore', ok, detail: ok ? 'Corretto: ' + it(ex.x) + '.' : 'Hai scritto ' + (v.a || '–') + ', era ' + it(ex.x) + '. ' + (got === -ex.x ? 'Controlla il bit di segno.' : 'La polarizzazione con 3 bit di esponente è 3, e la mantissa ha un 1 implicito prima della virgola.') }] }; }
+    const got = String(v.a || '').replace(/[^01]/g, ''), ok = got === ex.bits;
+    return { score: ok ? 1 : 0, items: [{ label: 'Configurazione', ok, detail: ok ? 'Corretto: ' + ex.bits + '.' : 'Hai scritto ' + (got || '–') + ', era ' + ex.bits + '. ' + (got.length !== 8 ? 'Servono 8 bit: 1 + 3 + 4.' : got.slice(1, 4) !== ex.bits.slice(1, 4) ? 'Esponente sbagliato: va sommata la polarizzazione 3.' : 'Ricontrolla la mantissa: sono i 4 bit dopo la virgola del numero normalizzato.') }] };
+  }
+  Object.assign(A, { miniValue, miniEncode, genMini, gradeMini });
+})(typeof globalThis !== 'undefined' ? globalThis : this);

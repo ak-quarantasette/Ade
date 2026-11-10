@@ -2,10 +2,12 @@
 // i contenuti vengono dagli appunti «AdE semplice (per davvero)» e dall'esempio ufficiale di compitino.
 (function (root) {
   const course = root.ADE.course;
-  const SRC = { ap: 'Appunti «AdE semplice (per davvero)», pag. ', ec: 'Esempio di compitino seconda parte 2025/26, ' };
+  // Fonte principale: le lezioni del docente (indicate per titolo). I numeri di pagina rimandano agli
+  // appunti «AdE semplice», che seguono le stesse slide e su cui le schede sono state scritte.
+  const L = (lez) => ({ ap: 'Slide ' + lez + '; appunti «AdE semplice», pag. ', ec: 'Esempio di compitino seconda parte 2025/26, ' });
 
   course.define('aritmetica', {
-    src: SRC,
+    src: L('Lez. 8 «Aritmetica del calcolatore»'),
     intro: 'Base per la virgola mobile. Il complemento a 2 si sbaglia facilmente per distrazione: allenalo con il generatore.',
     sections: [
       { title: 'Modulo e segno', src: 'ap:96', html: '<p>Il bit più a sinistra è il segno (0 positivo, 1 negativo), gli altri il modulo: <span class="mono">+18 = 00010010</span>, <span class="mono">−18 = 10010010</span>. Due difetti: nelle operazioni vanno trattati a parte segni e moduli, e lo zero ha due rappresentazioni (+0 e −0).</p>' },
@@ -46,7 +48,7 @@
   });
 
   course.define('virgola-mobile', {
-    src: SRC,
+    src: L('Lez. 8 «Aritmetica del calcolatore»'),
     intro: 'Nell\'esempio di compitino: una domanda di calcolo (conversione in IEEE 754) e una aperta (divisione in virgola mobile).',
     sections: [
       { title: 'L\'idea della virgola mobile', src: 'ap:107-108', html:
@@ -91,7 +93,7 @@
   });
 
   course.define('linguaggio-macchina', {
-    src: SRC,
+    src: L('Lez. 9 «Linguaggio macchina»'),
     intro: 'Teoria di contorno: serve per capire indirizzamento e pipeline.',
     sections: [
       { title: 'Elementi di un\'istruzione', src: 'ap:112-113', html:
@@ -128,7 +130,7 @@
   });
 
   course.define('indirizzamento', {
-    src: SRC,
+    src: L('Lez. 9 «Linguaggio macchina»'),
     intro: 'Nell\'esempio di compitino: una domanda a scelta multipla sugli accessi in memoria e una aperta sullo spiazzamento.',
     sections: [
       { title: 'I modi di base', src: 'ap:118-119; ec:es1', html:
@@ -175,7 +177,7 @@
   });
 
   course.define('processore', {
-    src: SRC,
+    src: L('Lez. 10 «Struttura e funzione della CPU»'),
     intro: 'Registri e ciclo dell\'istruzione: premessa alla pipeline.',
     sections: [
       { title: 'Compiti della CPU e registri', src: 'ap:124-126', html:
@@ -210,7 +212,7 @@
   });
 
   course.define('pipeline', {
-    src: SRC,
+    src: L('Lez. 11 «Pipeline» e Lez. 13 «RISC-V»'),
     intro: 'L\'argomento più pesante della seconda parte: nell\'esempio di compitino valgono una domanda di calcolo, una aperta e l\'esercizio finale.',
     sections: [
       { title: 'L\'idea', src: 'ap:130-132', diagram: 'pipeline', html:
@@ -275,7 +277,7 @@
   });
 
   course.define('risc-cisc', {
-    src: SRC,
+    src: L('Lez. 12 «Filosofia RISC»'),
     intro: 'Domanda aperta dell\'esempio di compitino: perché è difficile confrontare RISC e CISC.',
     sections: [
       { title: 'Da dove nasce il RISC', src: 'ap:158-159', html:
@@ -313,7 +315,7 @@
   });
 
   course.define('multicore', {
-    src: SRC,
+    src: L('Lez. 14 «Multicore»'),
     intro: 'Argomento breve di chiusura del corso.',
     sections: [
       { title: 'Perché i multicore', src: 'ap:197', html:

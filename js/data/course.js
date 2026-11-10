@@ -31,6 +31,7 @@
     T('processore', 2, 'Processore', 'Struttura e funzione del processore', ['indirizzamento'], 1),
     T('pipeline', 2, 'Pipeline', 'Pipeline: hazard, stalli, forwarding', ['processore'], 3),
     T('risc-cisc', 2, 'RISC e CISC', 'RISC e CISC', ['pipeline'], 1),
+    T('riscv', 2, 'RISC-V', 'Architettura RISC-V: istruzioni e formati', ['risc-cisc'], 1),
     T('multicore', 2, 'Multicore', 'Processori multicore', ['pipeline'], 1),
   ];
 
@@ -59,6 +60,23 @@
     course.pretests[id] = course.mcq[id].slice(0, 4);
     course.open[id] = (def.open || []).map(([oid, q, points, s]) => ({ id: 'open-' + id + '-' + oid, topic: id, q, points, src: src(s) }));
     (def.generators || []).forEach((g) => course.generators.push(Object.assign({ topic: id, kind: 'ex' }, g)));
+  };
+
+  /**
+   * Aggiunge contenuti a un argomento già definito (integrazioni dalle slide del docente).
+   * Stessa forma di define, più def.replace: { 'titolo sezione': nuovoHtml } per correggere una sezione.
+   */
+  course.extend = function (id, def) {
+    const page = course.pages[id];
+    if (!page) throw new Error('argomento non definito: ' + id);
+    const src = (s) => String(s).split(';').map((part) => { const [k, p] = part.trim().split(':'); if (!def.src[k]) throw new Error(id + ': fonte sconosciuta "' + k + '"'); return def.src[k] + (p || ''); }).join('; ');
+    Object.entries(def.replace || {}).forEach(([title, v]) => { const s = page.sections.find((x) => x.title === title); if (!s) throw new Error(id + ': sezione assente "' + title + '"'); s.html = v.html; s.src = src(v.src); });
+    (def.sections || []).forEach((s) => page.sections.push(Object.assign({}, s, { src: src(s.src) })));
+    (def.cards || []).forEach(([cid, sub, q, a, s, why]) => course.cards.push({ id: id + '-' + cid, topic: id, sub, q, a, src: src(s), why }));
+    (def.mcq || []).forEach(([q, opts, ok, why, s]) => course.mcq[id].push({ id: 'mcq-' + id + '-' + (course.mcq[id].length + 1), topic: id, q, opts, ok, why, src: src(s) }));
+    (def.open || []).forEach(([oid, q, points, s]) => course.open[id].push({ id: 'open-' + id + '-' + oid, topic: id, q, points, src: src(s) }));
+    (def.generators || []).forEach((g) => course.generators.push(Object.assign({ topic: id, kind: 'ex' }, g)));
+    (def.dropCards || []).forEach((cid) => { const i = course.cards.findIndex((c) => c.id === id + '-' + cid); if (i >= 0) course.cards.splice(i, 1); });
   };
 
   course.topicsOf = (phase) => topics.filter((t) => t.phase === phase);

@@ -74,3 +74,20 @@
       P.comments(ex.prog, ex.sch).map((c) => '<tr><td>' + c.cycle + '</td><td>' + c.instr + '</td><td>RAW x' + c.reg + '</td><td>' + c.unit + '</td><td class="mono small">' + esc(c.cond) + '</td><td>' + esc(c.action) + '</td></tr>').join('') + '</tbody></table></div>' +
       '<p class="small muted">Le dipendenze che non compaiono sono risolte dal banco dei registri: chi produce il dato è già in WB quando l\'istruzione è in ID.</p>' };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
+
+// ---- Integrazioni dagli esercizi del docente ----
+(function (root) {
+  const ADE = root.ADE, R = ADE.exercises, esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  R['disco-byte'] = { id: 'gen:disco-byte', title: 'Byte trasferiti e settori coinvolti', src: 'Slide «Esercizi sui dischi magnetici», esercizio 3',
+    make: (seed) => ADE.disco.genBytes(seed), prompt: (ex) => ex.html, fields: () => [{ name: 'b', label: 'Byte trasferiti (es. 64KB)' }, { name: 's', label: 'Settori coinvolti', wide: false }],
+    grade: (ex, v) => ADE.disco.gradeBytes(ex, v), steps: (ex) => ex.steps };
+  R.scheduling = { id: 'gen:scheduling', title: 'Algoritmi di posizionamento della testina', src: 'Slide «Esercizi sui dischi magnetici», esercizio 4',
+    make: (seed) => ADE.disco.genSched(seed), prompt: (ex) => ex.html, fields: () => [{ name: 'FCFS', label: 'FCFS (ms)', wide: false }, { name: 'SSF', label: 'SSF (ms)', wide: false }, { name: 'EA', label: 'Elevator (ms)', wide: false }],
+    grade: (ex, v) => ADE.disco.gradeSched(ex, v), steps: (ex) => ex.steps };
+  R.fpmini = { id: 'gen:fpmini', title: 'Virgola mobile in formato ridotto', src: 'Slide «Esercizi sulla rappresentazione in virgola mobile», esercizi 1-2',
+    make: (seed) => ADE.aritmetica.genMini(seed), prompt: (ex) => '<p>' + esc(ex.text) + '</p>', fields: (ex) => [{ name: 'a', label: ex.type === 'decodifica' ? 'Valore decimale' : 'Configurazione (8 bit)' }],
+    grade: (ex, v) => ADE.aritmetica.gradeMini(ex, v), steps: (ex) => ex.steps };
+  R.prestazioni = { id: 'gen:prestazioni', title: 'Tempo di ciclo e speedup della pipeline', src: 'Slide Lez. 11 «Pipeline», pipeline performance; «Esercizi sulla pipeline», pag. 4-5',
+    make: (seed) => ADE.pipeline.genPerf(seed), prompt: (ex) => '<p>' + esc(ex.text) + '</p>', fields: () => [{ name: 'tau', label: 'τ (ns)', wide: false }, { name: 'T', label: 'Tempo totale (ns)', wide: false }, { name: 'S', label: 'Speedup', wide: false }],
+    grade: (ex, v) => ADE.pipeline.gradePerf(ex, v), steps: (ex) => ex.steps };
+})(typeof globalThis !== 'undefined' ? globalThis : this);

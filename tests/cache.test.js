@@ -110,7 +110,7 @@ test('generatore traccia: 300 semi, soluzioni coerenti e autocorrezione a punteg
     assert.equal(cfg.tagBits + cfg.setBits + cfg.wordBits + cfg.byteBits, 12);
     // Invariante: a fine sequenza, memoria + linee sporche = memoria che si otterrebbe scrivendo direttamente.
     const direct = Object.assign({}, ex.memory);
-    ex.accesses.forEach((a) => { if (a.op === 's') direct[a.addr] = a.data; });
+    ex.accesses.forEach((a) => { if (a.op === 's') [].concat(a.data).forEach((b, k) => { direct[a.addr + k] = b; }); });
     const eff = Object.assign({}, sim.memory);
     sim.steps[sim.steps.length - 1].after.forEach((set, s) => set.forEach((l) => {
       if (!l.valid) return;

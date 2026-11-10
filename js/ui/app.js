@@ -232,8 +232,8 @@
   const hex3 = (n) => U.hex(n, 3);
 
   function accessTable(ex) {
-    return '<table><thead><tr><th>#</th><th>indirizzo (binario)</th><th>hex</th><th>l/s</th><th>byte scritto</th></tr></thead><tbody>' +
-      ex.accesses.map((a, i) => '<tr><td>' + (i + 1) + '</td><td class="mono">' + U.bin(a.addr, ex.cfg.addrBits).replace(/(.{4})(?=.)/g, '$1 ') + '</td><td class="mono">' + hex3(a.addr) + '</td><td>' + a.op + '</td><td class="mono">' + (a.op === 's' ? U.hex(a.data) : '') + '</td></tr>').join('') + '</tbody></table>';
+    return '<table><thead><tr><th>#</th><th>indirizzo (binario)</th><th>hex</th><th>l/s</th><th>dato scritto (hex)</th></tr></thead><tbody>' +
+      ex.accesses.map((a, i) => '<tr><td>' + (i + 1) + '</td><td class="mono">' + U.bin(a.addr, ex.cfg.addrBits).replace(/(.{4})(?=.)/g, '$1 ') + '</td><td class="mono">' + hex3(a.addr) + '</td><td>' + a.op + '</td><td class="mono">' + (a.op === 's' ? C.dataStr(a.data) : '') + '</td></tr>').join('') + '</tbody></table>';
   }
   function memTable(memory) {
     const addrs = Object.keys(memory).map(Number).sort((a, b) => a - b);
@@ -246,7 +246,7 @@
       set.map((l, w) => '<td>' + (cfg.ways > 1 ? '<span class="muted">l' + w + '</span> ' : '') + C.lineStr(l) + (l.valid ? '<br><span class="muted">tag ' + U.bin(l.tag, cfg.tagBits) + '</span>' : '') + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
   }
   function stepBlock(ex, st) {
-    return '<div class="card"><h3>Passo ' + (st.i + 1) + ': ' + (st.op === 's' ? 'scrittura di ' + U.hex(st.data) + ' in ' : 'lettura di ') + hex3(st.addr) + ' → ' + (st.hit ? 'hit' : 'miss') + '</h3><ul>' +
+    return '<div class="card"><h3>Passo ' + (st.i + 1) + ': ' + (st.op === 's' ? 'scrittura di ' + C.dataStr(st.data) + ' in ' : 'lettura di ') + hex3(st.addr) + ' → ' + (st.hit ? 'hit' : 'miss') + '</h3><ul>' +
       C.explainStep(ex.cfg, st).map((l) => '<li>' + esc(l) + '</li>').join('') + '</ul><p><strong>Memoria:</strong> <span class="mono">' + C.memStr(st) + '</span></p><div class="scroll">' + cacheTable(ex.cfg, st.after) + '</div></div>';
   }
   function statement(ex, title, src) {
@@ -263,7 +263,7 @@
   function traceRows(ex, from, req) {
     const cfg = ex.cfg, r = req ? ' required' : '', setName = cfg.ways === 1 ? 'linea' : 'set';
     const rows = ex.sim.steps.map((st, i) => i < from ? '' :
-      '<tr data-row="' + i + '"><td>' + (i + 1) + '</td><td class="mono">' + hex3(st.addr) + ' ' + st.op + (st.op === 's' ? ' ' + U.hex(st.data) : '') + '</td>' +
+      '<tr data-row="' + i + '"><td>' + (i + 1) + '</td><td class="mono">' + hex3(st.addr) + ' ' + st.op + (st.op === 's' ? ' ' + C.dataStr(st.data) : '') + '</td>' +
       '<td><select name="hit' + i + '"' + r + ' aria-label="Passo ' + (i + 1) + ': hit o miss"><option value="">…</option><option value="1">hit</option><option value="0">miss</option></select></td>' +
       '<td><input class="num" name="set' + i + '" inputmode="numeric"' + r + ' aria-label="Passo ' + (i + 1) + ': ' + setName + '"></td>' +
       (cfg.ways > 1 ? '<td><input class="num" name="way' + i + '" inputmode="numeric"' + r + ' aria-label="Passo ' + (i + 1) + ': linea nel set"></td>' : '') +

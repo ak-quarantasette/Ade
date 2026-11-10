@@ -5,7 +5,7 @@ Sistema di studio personale per l'esame di Architettura degli Elaboratori (Infor
 ## Le due parti
 Il corso è diviso in due parti che non si mescolano mai: argomenti, ripasso, esercizi, errori, piano, simulazione e progressi riguardano sempre **un solo compitino alla volta**.
 - **Fase 1, primo compitino** (18 novembre 2026): concetti base, notazione, componenti e interruzioni, bus, QPI, gerarchie e cache, memorie interne e Hamming, dischi/RAID/CD-ROM, SSD, gestione I/O.
-- **Fase 2, secondo compitino** (data da definire): aritmetica, IEEE 754, linguaggio macchina, indirizzamento, processore, pipeline, RISC/CISC, multicore.
+- **Fase 2, secondo compitino** (data da definire): aritmetica, IEEE 754, linguaggio macchina, indirizzamento, processore, pipeline, RISC/CISC, RISC-V, multicore.
 
 La fase corrente è `settings.phase` nello stato (selettore in alto nel sito, `node tools/ade.js fase [1|2]` in chat). Ogni argomento ha `phase` in `js/data/course.js`; le dipendenze non attraversano le parti (c'è un test).
 
@@ -20,8 +20,8 @@ La fase corrente è `settings.phase` nello stato (selettore in alto nel sito, `n
 ## Struttura
 - `index.html`, `css/style.css`: guscio del sito.
 - `js/core/`: logica pura. `scheduler.js` (SM-2), `state.js` (stato, coda, calibrazione, errori, simulazioni), `plan.js` (piano a ritroso).
-- `js/gen/`: generatori con correzione passo-passo. Parte 1: `cache.js`, `hamming.js`, `disco.js`, `basi.js`. Parte 2: `aritmetica.js` (complemento a 2, IEEE 754), `pipeline.js`. `registry.js` li espone con un'interfaccia unica (`ADE.exercises`).
-- `js/data/`: contenuti. `course.js` (fasi, argomenti, `course.define`). Parte 1: `intro.js`, `cache.js`, `memorie.js`, `esterne.js`. Parte 2: `fase2.js`.
+- `js/gen/`: generatori con correzione passo-passo. Parte 1: `cache.js`, `hamming.js`, `disco.js` (tempi, byte e settori, scheduling), `basi.js`. Parte 2: `aritmetica.js` (complemento a 2, IEEE 754, formato ridotto), `pipeline.js` (diagrammi, forwarding, prestazioni). `registry.js` li espone con un'interfaccia unica (`ADE.exercises`).
+- `js/data/`: contenuti. `course.js` (fasi, argomenti, `course.define`). Parte 1: `intro.js`, `cache.js`, `memorie.js`, `esterne.js`. Parte 2: `fase2.js`. `integrazioni.js` aggiunge a entrambe le parti ciò che è emerso dal confronto con le slide complete del docente (`course.extend`).
 - `js/ui/`: `app.js` (viste), `diagrams.js` (SVG).
 - `tests/`: `npm test`. Ogni generatore ha test, compresi i casi con soluzione ufficiale.
 - `tools/ade.js`: riga di comando per i comandi di chat.

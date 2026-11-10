@@ -80,7 +80,17 @@
    */
   function gen(seed, type) {
     const rnd = U.rng(seed);
-    type = type || rnd.pick(['codifica', 'sindrome', 'decodifica']);
+    type = type || rnd.pick(['codifica', 'sindrome', 'decodifica', 'codifica', 'sindrome', 'decodifica', 'quanti']);
+    if (type === 'quanti') {
+      // Esercizio 3 del docente: quanti bit di controllo per una parola di M bit.
+      const M = rnd.pick([4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]);
+      const K = checkBits(M);
+      return { type, seed, m: M, k: K, answer: String(K), label: 'Numero di bit di controllo',
+        text: 'Quanti bit di controllo sono necessari se il codice a correzione di errore di Hamming viene usato per rilevare errori di bit singoli in una parola di dati a ' + M + ' bit?',
+        steps: ['Serve il minimo K tale che 2^K ≥ M + K + 1: bisogna poter indicare quale degli M + K bit è errato, più il caso "nessun errore".',
+          'Con K = ' + (K - 1) + ': 2^' + (K - 1) + ' = ' + 2 ** (K - 1) + ' < ' + M + ' + ' + (K - 1) + ' + 1 = ' + (M + K) + ', non basta.',
+          'Con K = ' + K + ': 2^' + K + ' = ' + 2 ** K + ' ≥ ' + M + ' + ' + K + ' + 1 = ' + (M + K + 1) + '. Quindi K = ' + K + '.'] };
+    }
     const m = type === 'sindrome' ? 8 : rnd.pick([8, 16]);
     const k = checkBits(m), n = m + k;
     const data = randBits(rnd, m);
@@ -125,6 +135,10 @@
   }
 
   function grade(ex, answer) {
+    if (ex.type === 'quanti') {
+      const n = parseInt(String(answer || '').trim(), 10), ok = n === ex.k;
+      return { ok, score: ok ? 1 : 0, exp: String(ex.k), why: ok ? '' : n === ex.k - 1 ? 'Con K = ' + n + ' si ha 2^K = ' + 2 ** n + ', che è minore di M + K + 1 = ' + (ex.m + n + 1) + ': hai dimenticato che K compare anche a destra.' : 'Cerca il minimo K con 2^K ≥ M + K + 1.' };
+    }
     const got = clean(answer);
     const ok = got === ex.answer;
     let why = '';

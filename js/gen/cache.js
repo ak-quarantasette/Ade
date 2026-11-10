@@ -93,11 +93,13 @@
 
       const line = set[way];
       if (acc.op === 's') {
-        line.data[f.word] = acc.data;
-        if (cfg.write === 'through') {
-          mem[acc.addr] = acc.data;
-          step.memWrites.push({ addr: acc.addr, val: acc.data, changed: true });
-        } else line.dirty = true;
+        // Il dato scritto è un byte oppure, con parola più grande di un byte, un'intera parola (elenco di byte).
+        const bytes = Array.isArray(acc.data) ? acc.data : [acc.data];
+        bytes.forEach((b, k) => {
+          line.data[f.word + k] = b;
+          if (cfg.write === 'through') { mem[acc.addr + k] = b; step.memWrites.push({ addr: acc.addr + k, val: b, changed: true }); }
+        });
+        if (cfg.write !== 'through') line.dirty = true;
       }
       line.usedAt = i;
       step.way = way;
@@ -114,6 +116,7 @@
     ' (politica di rimpiazzo ' + cfg.repl + ', politica di scrittura ' +
     (cfg.write === 'back' ? 'write-back' : 'write-through') + ', miss in scrittura gestiti con write allocate)';
 
+  const dataStr = (d) => (Array.isArray(d) ? d.map((b) => U.hex(b)).join('') : U.hex(d));
   const lineStr = (l) => (l.valid ? '[' + l.data.map((b) => U.hex(b)).join(' ') + ']' + (l.dirty ? '*' : '') : '(vuota)');
 
   /** Spiegazione in italiano di un passo della traccia. */
@@ -139,7 +142,7 @@
       out.push('Si carica il blocco ' + U.hex(st.blockAddr, 3) + ': [' + st.loaded.map((b) => U.hex(b)).join(' ') + ']' + (st.op === 's' ? ' (write allocate: prima si carica, poi si scrive).' : '.'));
     }
     if (st.op === 's') {
-      out.push('Scrittura di ' + U.hex(st.data) + ' nel byte ' + st.word + ' del blocco: ' +
+      out.push('Scrittura di ' + dataStr(st.data) + (Array.isArray(st.data) ? ' a partire dal byte ' : ' nel byte ') + st.word + ' del blocco: ' +
         (cfg.write === 'back' ? 'solo in cache, la linea diventa sporca (*).' : 'in cache e subito in memoria (write-through).'));
     }
     return out;
@@ -176,12 +179,18 @@
         if (!pool.includes(b)) pool.push(b);
       }
       const accesses = [];
+      // Con parola di 4 byte si scrive l'intera parola a un indirizzo allineato (come nell'Esercizio 6 del docente);
+      // con parola di 2 byte si scrive un byte (come nel compitino 2025).
+      const wordWrites = cfg.wordBytes === 4;
       for (let i = 0; i < 8; i++) {
-        const addr = rnd.pick(pool) + rnd.int(0, cfg.blockBytes - 1);
+        let addr = rnd.pick(pool) + rnd.int(0, cfg.blockBytes - 1);
         const write = i < 2 ? rnd.next() < 0.7 : rnd.next() < 0.3;
-        accesses.push(write ? { addr, op: 's', data: rnd.int(1, 255) } : { addr, op: 'l' });
+        if (wordWrites) addr -= addr % cfg.wordBytes;
+        const data = wordWrites ? Array.from({ length: cfg.wordBytes }, () => rnd.int(1, 255)) : rnd.int(1, 255);
+        accesses.push(write ? { addr, op: 's', data } : { addr, op: 'l' });
       }
       const sim = simulate(cfg, memory, accesses);
+      cfg.wordWrites = wordWrites;
       const hits = sim.steps.filter((s) => s.hit).length;
       const evictions = sim.steps.filter((s) => s.evicted).length;
       const writes = accesses.filter((a) => a.op === 's').length;
@@ -323,5 +332,5 @@
     return { items, points, max: items.length, score: points / items.length };
   }
 
-  ADE.cache = { makeConfig, split, simulate, explainStep, genTrace, gradeTrace, parseMem, memStr, lineStr, policyText, genFields, gradeFields };
+  ADE.cache = { dataStr, makeConfig, split, simulate, explainStep, genTrace, gradeTrace, parseMem, memStr, lineStr, policyText, genFields, gradeFields };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

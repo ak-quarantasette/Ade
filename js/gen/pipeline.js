@@ -174,3 +174,29 @@
 
   ADE.pipeline = { OPS, parse, text, schedule, stageAt, tableHtml, comments, gen, genCount, grade };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
+
+// ---- Prestazioni della pipeline (Lez. 11 e «Esercizi sulla pipeline» del docente) ----
+(function (root) {
+  const ADE = root.ADE, U = ADE.util, P = ADE.pipeline;
+  /** τ = max τi + d ; Tk = (k + n − 1)·τ ; Sk = n·k / (k + n − 1) */
+  function perf(delays, d, n) { const k = delays.length, tau = Math.max(...delays) + d; return { k, tau, Tk: (k + n - 1) * tau, speedup: (n * k) / (k + n - 1) }; }
+  function genPerf(seed) {
+    const rnd = U.rng(seed), k = rnd.pick([4, 5, 6]), n = rnd.pick([10, 20, 50, 100]), d = rnd.pick([1, 2, 5]);
+    const delays = Array.from({ length: k }, () => rnd.pick([20, 30, 40, 50, 60, 80]));
+    const r = perf(delays, d, n);
+    return { kind: 'prestazioni', seed, delays, d, n, r,
+      text: 'Una pipeline ha ' + k + ' stadi con tempi di esecuzione ' + delays.join(', ') + ' ns; il ritardo di commutazione dei registri tra gli stadi è ' + d + ' ns. Calcolare: il tempo di ciclo τ; il tempo totale per eseguire ' + n + ' istruzioni (senza salti né stalli); lo speedup ideale rispetto all\'esecuzione senza pipeline.',
+      steps: ['Tempo di ciclo: τ = max τi + d = ' + Math.max(...delays) + ' + ' + d + ' = ' + r.tau + ' ns (comanda lo stadio più lento).', 'Tempo totale: Tk = (k + n − 1) · τ = (' + k + ' + ' + n + ' − 1) · ' + r.tau + ' = ' + r.Tk + ' ns: k cicli per la prima istruzione, uno in più per ciascuna delle altre.',
+        'Speedup ideale: Sk = n·k / (k + n − 1) = ' + n * k + ' / ' + (k + n - 1) + ' = ' + String(+r.speedup.toFixed(3)).replace('.', ',') + '. Al crescere di n tende a k = ' + k + '.'] };
+  }
+  function gradePerf(ex, v) {
+    const num = (s) => parseFloat(String(s || '').replace(',', '.'));
+    const chk = (label, got, exp, why, tol) => { const ok = Math.abs(num(got) - exp) <= (tol || 0); return { label, ok, detail: ok ? 'Corretto.' : 'Hai scritto ' + (got || '–') + ', era ' + String(+exp.toFixed(3)).replace('.', ',') + '. ' + why }; };
+    const sum = ex.delays.reduce((a, b) => a + b, 0);
+    const items = [chk('Tempo di ciclo τ (ns)', v.tau, ex.r.tau, num(v.tau) === Math.max(...ex.delays) ? 'Hai dimenticato il ritardo dei registri d.' : num(v.tau) === sum + ex.d ? 'Non si sommano gli stadi: il ciclo è fissato dallo stadio più lento.' : 'τ = massimo dei tempi di stadio + d.'),
+      chk('Tempo totale (ns)', v.T, ex.r.Tk, num(v.T) === ex.n * ex.r.tau ? 'Mancano i k − 1 cicli iniziali di riempimento della pipeline.' : 'Tk = (k + n − 1) · τ.'),
+      chk('Speedup', v.S, ex.r.speedup, 'Sk = n·k / (k + n − 1).', 0.011)];
+    return { score: items.filter((i) => i.ok).length / 3, items };
+  }
+  Object.assign(P, { perf, genPerf, gradePerf });
+})(typeof globalThis !== 'undefined' ? globalThis : this);

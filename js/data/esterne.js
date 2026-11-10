@@ -37,7 +37,7 @@
   });
 
   course.define('mem-esterne', {
-    src: { e: 'Slide «Memoria esterna», pag. ', ap: AP },
+    src: { e: 'Slide «Memoria esterna», pag. ', ap: 'Slide Lez. 6 «Memorie esterne»; appunti «AdE semplice», pag. ' },
     intro: 'Al compitino: una domanda a scelta multipla di calcolo sul disco e spesso una di teoria (CD-ROM nel 2025).',
     sections: [
       { title: 'Com\'è fatto un disco magnetico', src: 'e:1-3', diagram: 'disco', html:
@@ -130,8 +130,8 @@
   });
 
   course.define('io', {
-    src: { ap: AP, c2: 'Slide «Componenti e connessioni» parte 2, pag. ' },
-    intro: 'Non c\'è una dispensa del docente: i contenuti vengono dagli appunti. Nel 2025 è uscita una domanda a scelta multipla sull\'I/O interrupt driven.',
+    src: { ap: 'Slide Lez. 7 «Input/Output»; appunti «AdE semplice», pag. ', c2: 'Slide «Componenti e connessioni» parte 2, pag. ' },
+    intro: 'Nel 2025 è uscita una domanda a scelta multipla sull\'I/O interrupt driven.',
     sections: [
       { title: 'Il modulo di I/O', src: 'ap:80-81', html:
         '<p>Le periferiche sono tante, diverse per formato e velocità, e più lente di CPU e RAM: tra loro e il bus sta un <strong>modulo di I/O</strong>. Funzioni: controllo e temporizzazione, comunicazione con il processore (decodifica comandi, stato, riconoscimento dell\'indirizzo), comunicazione con i dispositivi, <strong>buffering</strong> dei dati, rilevamento degli errori.</p>' },

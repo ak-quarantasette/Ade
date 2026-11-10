@@ -97,7 +97,7 @@ const cmds = {
     need(type === 'traccia' ? 1 : undefined, 'tipo sconosciuto: ' + type + ' (usa "esercizi" per l\'elenco)');
     const ex = C.genTrace(seed);
     out({ seed, testo: ex.text, cfg: ex.cfg,
-      accessi: ex.accesses.map((a) => ({ ind: U.hex(a.addr, 3), bin: U.bin(a.addr, 12), op: a.op, byte: a.op === 's' ? U.hex(a.data) : undefined })),
+      accessi: ex.accesses.map((a) => ({ ind: U.hex(a.addr, 3), bin: U.bin(a.addr, 12), op: a.op, byte: a.op === 's' ? C.dataStr(a.data) : undefined })),
       memoria: Object.fromEntries(Object.entries(ex.memory).map(([a, b]) => [U.hex(Number(a), 3), U.hex(b)])),
       soluzione: ex.sim.steps.map((s) => ({ passo: s.i + 1, hit: s.hit, set: s.set, linea: s.way, memoria: C.memStr(s), spiegazione: C.explainStep(ex.cfg, s),
         cache: s.after.map((set) => set.map((l) => C.lineStr(l) + (l.valid ? ' tag ' + U.bin(l.tag, ex.cfg.tagBits) : ''))) })) });
