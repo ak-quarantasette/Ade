@@ -1,32 +1,37 @@
 # Lacune
 
-Cosa manca nel materiale o nel sito, aggiornato al 9 novembre 2026.
+Cosa manca nel materiale o nel sito, aggiornato al 10 novembre 2026.
 
-## Materiale del corso (repo WEBbox)
-| Dispensa | Argomento del sito | Nel sito |
+## Prima parte: fonti usate
+| Argomento | Fonte | Esercizi generati |
 |---|---|---|
-| Concetti_Base_Capitolo1, introduzione_architettura, Evoluzione_Calcolatori 1-2 | intro | no |
-| Notazione_2_8_16_bool | notazione | no |
-| Componenti_connessioni 1-2 | componenti | no |
-| Bus | bus | no |
-| QPI | qpi | no |
-| Gerarchia_memoria 1, 1b, 2; es1-4_cache_con_sol; Esercizio_cache_5 (+sol) | cache | **sì** |
-| memorie_interne | mem-interne | no |
-| memorie_esterne_1 | mem-esterne | no |
-| DischiSSD | ssd | no |
-| Compitini prima parte 2025 (due turni) | formato d'esame | usati per formato e test |
-| Esempio compitino seconda parte | fase 2 | no |
+| Concetti base ed evoluzione | Slide «Introduzione», «Evoluzione dei calcolatori» 1-2 | – |
+| Notazione e Boole | Slide «Notazione binaria, ottale, esadecimale. Algebra di Boole» | conversioni |
+| Componenti e interruzioni | Slide «Componenti e connessioni» 1-2 | – |
+| Bus | Slide «Bus» | – |
+| QPI | Slide «QPI» | – |
+| Gerarchie e cache | Slide «Gerarchie di memoria» 1, 1b, 2; esercizi cache 1-5 | campi, traccia |
+| Memorie interne e Hamming | Slide «Memoria centrale a semiconduttore» | Hamming |
+| Dischi, RAID, CD-ROM | Slide «Memoria esterna» per i dischi; **appunti** per RAID e CD-ROM | disco |
+| SSD | Slide «Dischi SSD» | – |
+| Gestione I/O | **Solo appunti** (pag. 80-86) | – |
 
-## Argomenti d'esame senza dispensa
-- **Gestione dell'I/O** (I/O programmato, interrupt-driven, DMA): nel 2025 c'era una domanda a scelta multipla, ma non c'è una dispensa dedicata. Gli interrupt sono in «Componenti e connessioni» parte 2. Se hai le slide sull'I/O, caricale.
-- **CD-ROM** (pit e land, velocità lineare costante): domanda a scelta multipla nel 2025; «Memorie esterne» parte 1 lo nomina soltanto. Probabile dispensa mancante («Memorie esterne» parte 2?).
-- **Tutta la fase 2** (aritmetica, IEEE 754, linguaggio macchina, indirizzamento, pipeline, RISC/CISC, multicore): nessuna dispensa del docente, solo l'esempio di compitino.
+## Seconda parte: fonti usate
+Nessuna slide del docente nella repo: tutti gli otto argomenti vengono dagli appunti «AdE semplice» (pag. 96-198) e dall'esempio ufficiale di compitino 2025/26. Esercizi generati: complemento a 2, IEEE 754, cicli risparmiati con il forwarding, evoluzione della pipeline.
 
-## Dubbi aperti sui contenuti
-- Campi dell'indirizzo con parola più grande di un byte (ASSUNZIONI A3).
-- Convenzione per il calcolo del disco (ASSUNZIONI A8).
+## Cosa manca nel materiale
+- **Slide del docente** su: gestione dell'I/O, RAID, CD-ROM, e tutta la seconda parte. Quando le carichi, `/aggiorna-materiale` le rende la fonte principale.
+- **Compitini veri della seconda parte**: c'è solo un esempio, senza punteggi.
+- **Soluzione dell'altro turno 2025** per la domanda sul disco (ASSUNZIONI A8).
 
-## Sito
-- Pronto: struttura dati, scheduler, mappa, argomento Cache completo (pagina, 27 carte, pre-test, 5 domande aperte, 2 generatori con 3 livelli di guida), quaderno errori, piano, progressi, backup, comandi.
-- Manca: contenuti degli altri 8 argomenti della fase 1; generatori Hamming e disco; simulatore d'esame a tempo; tutta la fase 2.
-- Limite noto: sito e comandi di chat si sincronizzano solo con export/import manuale del JSON.
+## Punti non coperti o coperti poco
+- Algebra di Boole e reti logiche: solo le operazioni di base; i "contenuti integrativi" su circuiti e microprogrammazione non sono trattati.
+- Moltiplicazione (Booth) e divisione binaria: spiegate, senza esercizio generato.
+- Pipeline: salti presi, predizione e salto ritardato sono solo teoria (carte e domande aperte), non entrano nell'esercizio.
+- Architettura MIPS-32 in dettaglio (datapath, segnali di controllo): solo ciò che serve per stalli e forwarding.
+- Dubbio aperto: campi parola/byte quando la parola è più grande di un byte (ASSUNZIONI A3).
+
+## Limiti del sito
+- Sito e comandi di chat si sincronizzano solo con export/import manuale del JSON.
+- Flashcard e domande aperte sono autovalutate; nel simulatore le aperte si correggono con la griglia.
+- Le carte sono state confrontate con la fonte mentre le scrivevo, non una seconda volta a campione da una persona: se una ti sembra sbagliata rispetto alle slide, vince la slide e va segnalata.

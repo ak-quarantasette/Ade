@@ -137,3 +137,22 @@
     return fig(s + '</svg>', 'Posizioni da 12 a 1. I controlli (evidenziati) stanno nelle potenze di 2. C4 copre le posizioni il cui numero binario ha il bit di peso 4 a 1: 5, 6, 7, 12.');
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
+
+(function (root) {
+  const D = root.ADE.diagrams;
+  const fig = (svg, caption) => '<figure>' + svg + '<figcaption>' + caption + '</figcaption></figure>';
+  D.pipeline = () => {
+    const st = [['IF', 'preleva'], ['ID', 'decodifica, legge registri'], ['EX', 'ALU'], ['MEM', 'memoria dati'], ['WB', 'scrive registro']];
+    let s = '<svg viewBox="0 0 560 120" role="img" aria-label="I cinque stadi della pipeline separati dai registri IF/ID, ID/EX, EX/MEM, MEM/WB">';
+    st.forEach(([n, d], i) => { const x = 10 + i * 110;
+      s += '<rect class="' + (i === 2 ? 'box-acc' : 'box') + '" x="' + x + '" y="20" width="84" height="44" rx="5"/><text x="' + (x + 42) + '" y="47" text-anchor="middle"' + (i === 2 ? ' class="on-acc"' : '') + '>' + n + '</text><text class="t-muted" x="' + (x + 42) + '" y="82" text-anchor="middle">' + d + '</text>';
+      if (i < 4) s += '<rect class="box-soft" x="' + (x + 91) + '" y="14" width="12" height="56" rx="2"/><text class="t-muted" x="' + (x + 97) + '" y="104" text-anchor="middle">' + ['IF/ID', 'ID/EX', 'EX/MEM', 'MEM/WB'][i] + '</text>'; });
+    return fig(s + '</svg>', 'Tra uno stadio e il successivo c\'è un registro di pipeline. Il forwarding porta i dati da EX/MEM e MEM/WB agli ingressi della ALU, nello stadio EX.');
+  };
+  D.ieee = () => fig('<svg viewBox="0 0 560 84" role="img" aria-label="I 32 bit IEEE 754: 1 di segno, 8 di esponente, 23 di mantissa">' +
+    '<rect class="box-acc" x="10" y="24" width="34" height="34" rx="4"/><text class="on-acc" x="27" y="46" text-anchor="middle">s</text>' +
+    '<rect class="box-soft" x="48" y="24" width="150" height="34" rx="4"/><text x="123" y="46" text-anchor="middle">esponente + 127</text>' +
+    '<rect class="box" x="202" y="24" width="348" height="34" rx="4"/><text x="376" y="46" text-anchor="middle">mantissa (bit dopo la virgola)</text>' +
+    '<text class="t-muted" x="27" y="76" text-anchor="middle">1</text><text class="t-muted" x="123" y="76" text-anchor="middle">8 bit</text><text class="t-muted" x="376" y="76" text-anchor="middle">23 bit</text></svg>',
+    'Valore = (−1)^s · 1,mantissa · 2^(esponente − 127).');
+})(typeof globalThis !== 'undefined' ? globalThis : this);

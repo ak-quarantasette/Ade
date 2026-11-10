@@ -137,3 +137,38 @@ test('contenuti: ogni carta ha fonte, argomento esistente e id unico', () => {
   const pos = new Map(ADE.course.topics.map((t, i) => [t.id, i]));
   for (const t of ADE.course.topics) for (const d of t.deps) assert.ok(pos.get(d) < pos.get(t.id));
 });
+
+test('fasi: ogni argomento appartiene a una sola parte e le dipendenze non attraversano le parti', () => {
+  const c = ADE.course;
+  assert.deepEqual([...new Set(c.topics.map((t) => t.phase))].sort(), [1, 2]);
+  for (const t of c.topics) for (const d of t.deps) assert.equal(c.phaseOf(d), t.phase, t.id + ' dipende da ' + d + ', che è nell\'altra parte');
+  for (const t of c.topics) assert.ok(t.ready, 'argomento senza contenuti: ' + t.id);
+  // La data limite degli intervalli è quella del compitino giusto.
+  const st = ST.defaultState();
+  st.settings.phase2Date = '2027-01-20';
+  assert.equal(ST.examDateFor(st, { topic: 'cache' }), '2026-11-18');
+  assert.equal(ST.examDateFor(st, { topic: 'pipeline' }), '2027-01-20');
+});
+
+test('contenuti: scelta multipla, domande aperte, pagine ed esercizi sono completi per ogni argomento', () => {
+  const c = ADE.course;
+  for (const t of c.topics) {
+    assert.ok(c.pages[t.id].sections.length >= 3, t.id);
+    for (const s of c.pages[t.id].sections) assert.ok(s.src && s.html && s.title, t.id);
+    assert.ok(c.cards.filter((x) => x.topic === t.id).length >= 6, 'poche carte: ' + t.id);
+    assert.ok(c.mcq[t.id].length >= 4 && c.pretests[t.id].length === 4, t.id);
+    for (const q of c.mcq[t.id]) { assert.ok(q.ok >= 0 && q.ok < q.opts.length && q.why && q.src && q.topic === t.id, q.id); assert.equal(new Set(q.opts).size, q.opts.length, 'opzioni duplicate ' + q.id); }
+    for (const o of c.open[t.id]) assert.ok(o.points.length >= 5 && o.src && o.topic === t.id, o.id);
+  }
+  const ids = new Set();
+  for (const x of [].concat(c.cards, Object.values(c.mcq).flat(), Object.values(c.open).flat(), c.generators)) { assert.ok(!ids.has(x.id), 'id duplicato ' + x.id); ids.add(x.id); }
+  // Ogni generatore elencato ha un esercizio registrato (la traccia di cache ha una pagina dedicata).
+  for (const g of c.generators) if (g.sub !== 'traccia') {
+    const R = ADE.exercises[g.sub];
+    assert.ok(R && R.id === g.id, 'esercizio non registrato: ' + g.sub);
+    const ex = R.make(123);
+    assert.ok(R.prompt(ex).length > 20 && Array.isArray(R.fields(ex)) && R.steps(ex).length > 0, g.sub);
+  }
+  // Il simulatore ha abbastanza materiale in entrambe le parti: 4 argomenti con domande aperte e almeno una scelta multipla.
+  for (const p of [1, 2]) assert.ok(c.topicsOf(p).filter((t) => c.open[t.id].length).length >= 4, 'parte ' + p);
+});

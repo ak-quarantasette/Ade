@@ -358,35 +358,6 @@
     });
   }
 
-  function viewCampi() {
-    main.className = '';
-    const ex = C.genFields(Math.floor(Math.random() * 1e9));
-    const names = { tag: 'tag', set: ex.cfg.ways === 1 ? 'linea' : 'set', word: 'parola', addr: 'indirizzo' };
-    const gen = course.generators.find((x) => x.sub === 'campi');
-    main.innerHTML = '<h1>Esercizio: campi dell\'indirizzo</h1><p>' + esc(ex.text) + '</p><form id="ff"><div class="row">' +
-      ex.asks.map((k) => '<label>bit di ' + names[k] + ' <input class="num" name="' + k + '" inputmode="numeric" required></label>').join('') + '</div>' +
-      '<div class="row"><label>Quanto sei sicuro? <select name="conf" required><option value="">…</option>' + [1, 2, 3, 4, 5].map((n) => '<option>' + n + '</option>').join('') + '</select></label><button class="primary">Correggi</button></div></form><div id="res" aria-live="polite"></div>';
-    $('input', $('#ff')).focus();
-    $('#ff').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const g = C.gradeFields(ex, Object.fromEntries(ex.asks.map((k) => [k, fd.get(k)])));
-      ST.recordExercise(state, gen, g.score, Number(fd.get('conf')), today()); save();
-      $$('#ff input, #ff select, #ff button').forEach((el) => (el.disabled = true));
-      $('#res').innerHTML = g.items.map((it) => '<p class="msg ' + (it.ok ? 'ok' : 'bad') + '"><strong>' + it.label + ':</strong> ' + (it.ok ? it.exp + ', corretto.' : 'hai scritto ' + esc(it.got) + ', era ' + it.exp + '. ' + esc(it.why)) + '</p>').join('') +
-        (g.score < 1 ? '<div id="ekbox">' + errorPicker('ek') + '</div>' : '') +
-        '<details' + (g.score < 1 ? ' open' : '') + '><summary>Procedimento completo</summary><ol>' + ex.steps.map((s) => '<li>' + esc(s) + '</li>').join('') + '</ol>' + D.campi(ex.cfg) + '</details>' +
-        '<p class="src">Procedimento come in Slide «Esercizi cache 1-4», pag. 1-2</p><div class="row"><button class="primary" id="more">Altro esercizio <kbd>n</kbd></button><a class="btn" href="#/es/traccia">Passa alla traccia</a></div>';
-      on('#more', 'click', viewCampi);
-      keys = (k) => { if (k === 'n') { viewCampi(); return true; } };
-      on('[data-ek]', 'click', (ev) => {
-        ST.addError(state, { topic: 'cache', ref: gen.id, kind: ev.currentTarget.dataset.ek, note: g.items.filter((i) => !i.ok).map((i) => i.label).join(', ') }, today()); save();
-        $('#ekbox').innerHTML = '<p class="msg">Registrato nel quaderno degli errori.</p>';
-      });
-      $('#more').focus();
-    });
-  }
-
   // ---------- Domande aperte con griglia di autovalutazione ----------
   function viewAperte(id) {
     main.className = '';
@@ -440,12 +411,13 @@
     const advice = { concetto: 'Torna alla spiegazione e all\'esempio svolto prima di riprovare.', calcolo: 'Il metodo c\'è: rifai il conto scrivendo ogni passaggio.', distrazione: 'Rileggi la consegna e controlla la risposta prima di consegnare.' };
     main.innerHTML = phaseTag() + '<h1>Quaderno degli errori</h1><p class="muted">Ogni errore torna in rotazione finché non lo risolvi due volte di fila, a distanza di giorni.</p>' +
       '<div class="tiles">' + byKind.map(([k, n]) => '<div class="tile"><b>' + n + '</b><span>' + k + '</span></div>').join('') + '</div>' +
-      (open.length ? open.map((e) => { const r = refLabel(e.ref); const due = U.diffDays(e.due, t) >= 0; return '<div class="card" data-err="' + e.id + '"><p><span class="badge s-' + (due ? 'bad' : 'none') + '">' + (due ? 'da riprovare oggi' : 'torna il ' + dateIt(e.due)) + '</span> <span class="badge s-none">' + e.kind + '</span> <span class="small muted">' + esc(topic(e.topic).short) + ' · ' + dateIt(e.d) + ' · successi ' + e.wins + '/2</span></p><p><strong>' + esc(r.text) + '</strong></p>' +
+      (open.length ? open.map((e) => { const r = refLabel(e.ref); const due = U.diffDays(e.due, t) >= 0; return '<div class="card" data-err="' + e.id + '"><p><span class="badge s-' + (due ? 'bad' : 'none') + '">' + (due ? 'da riprovare oggi' : 'torna il ' + dateIt(e.due)) + '</span> <label class="small muted">tipo <select data-kind aria-label="Tipo di errore">' + ST.ERROR_KINDS.map((k) => '<option' + (k === e.kind ? ' selected' : '') + '>' + k + '</option>').join('') + '</select></label> <span class="small muted">' + esc(topic(e.topic).short) + ' · ' + dateIt(e.d) + ' · successi ' + e.wins + '/2</span></p><p><strong>' + esc(r.text) + '</strong></p>' +
         (e.note ? '<p class="small muted">' + esc(e.note) + '</p>' : '') + '<p class="small">' + advice[e.kind] + '</p>' +
         (r.card ? '<details><summary>Riprova: rispondi, poi apri per controllare</summary><p>' + esc(r.card.a) + '</p><p class="src">' + esc(r.card.src) + '</p><div class="row"><button data-retry="1">Ora giusta</button><button data-retry="0">Ancora sbagliata</button></div></details>'
           : '<div class="row"><a class="btn" href="' + (r.href || '#/') + '">Rifai un esercizio di questo tipo</a><button data-retry="1">L\'ho rifatto giusto</button><button data-retry="0">Ancora sbagliato</button></div>') + '</div>'; }).join('')
         : '<p class="msg ok">Nessun errore aperto.</p>') +
       (mine.length > open.length ? '<p class="small muted">' + (mine.length - open.length) + ' errori risolti.</p>' : '');
+    on('[data-kind]', 'change', (e) => { const err = state.errors.find((x) => x.id === e.target.closest('[data-err]').dataset.err); err.kind = e.target.value; save(); viewErrori(); });
     on('[data-retry]', 'click', (e) => { ST.retryError(state, e.target.closest('[data-err]').dataset.err, e.target.dataset.retry === '1', t); save(); viewErrori(); });
   }
 
@@ -501,7 +473,7 @@
     if (!inPhase(gen.topic)) { state.settings.phase = course.phaseOf(gen.topic); save(); drawPhase(); }
     const ex = R.make(Math.floor(Math.random() * 1e9));
     main.innerHTML = phaseTag() + '<p class="small muted"><a href="#/es">Esercizi</a> / ' + esc(topic(gen.topic).short) + '</p><h1>' + esc(R.title) + '</h1>' + R.prompt(ex) +
-      '<form id="gf"><div class="row">' + R.fields(ex).map((f) => fieldInput(f, '')).join('') + '</div>' + (R.extra ? R.extra(ex) : '') +
+      '<form id="gf"><div class="row">' + R.fields(ex).map((f) => fieldInput(f, '')).join('') + '</div>' + (R.form ? R.form(ex) : '') +
       '<div class="row"><label>Quanto sei sicuro? <select name="conf" required><option value="">…</option>' + [1, 2, 3, 4, 5].map((n) => '<option>' + n + '</option>').join('') + '</select></label><button class="primary">Correggi</button></div></form><div id="res" aria-live="polite"></div>';
     const first = $('#gf input'); if (first) first.focus();
     $('#gf').addEventListener('submit', (e) => {

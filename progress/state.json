@@ -3,6 +3,7 @@
   "updatedAt": null,
   "settings": {
     "theme": "auto",
+    "phase": 1,
     "examDate": "2026-11-18",
     "phase2Date": null,
     "newPerDay": 15
@@ -10,5 +11,6 @@
   "items": {},
   "reviews": [],
   "errors": [],
-  "pretest": {}
+  "pretest": {},
+  "exams": []
 }
