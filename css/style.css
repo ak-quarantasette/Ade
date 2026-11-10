@@ -140,3 +140,121 @@ fieldset.q legend { font-weight: 600; margin-bottom: .4rem; }
 table.pipe td, table.pipe th { text-align: center; padding: .2rem .35rem; font-family: var(--mono); font-size: .8rem; border: 1px solid var(--line); white-space: nowrap; }
 table.pipe td:first-child, table.pipe th:first-child { text-align: left; }
 table.pipe td.st { color: var(--bad); }
+
+/* =====================================================================================
+   Identità visiva. Il linguaggio viene dal corso: celle di memoria, registri, indirizzi.
+   Carta fredda da scheda tecnica, titoli in serif da manuale, un colore per compitino.
+   ===================================================================================== */
+:root {
+  --bg: #eef1f5; --surface: #ffffff; --text: #131820; --muted: #566171; --line: #cfd6df; --soft: #e3e8ee;
+  --accent: #1b49c4; --accent-text: #ffffff; --accent-soft: #dbe5fb;
+  --serif: Charter, "Bitstream Charter", "Iowan Old Style", "Sitka Text", Cambria, Georgia, serif;
+}
+:root[data-phase="2"] { --accent: #8a2a9e; --accent-soft: #f1dff5; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0e1217; --surface: #171c23; --text: #e9edf2; --muted: #9aa5b3; --line: #2c343f; --soft: #1f262f; --accent: #86a8ff; --accent-text: #0b1020; --accent-soft: #1c2a52; }
+  :root[data-phase="2"]:not([data-theme="light"]) { --accent: #d59be4; --accent-soft: #3a2142; }
+}
+:root[data-theme="dark"] { --bg: #0e1217; --surface: #171c23; --text: #e9edf2; --muted: #9aa5b3; --line: #2c343f; --soft: #1f262f; --accent: #86a8ff; --accent-text: #0b1020; --accent-soft: #1c2a52; }
+:root[data-theme="dark"][data-phase="2"] { --accent: #d59be4; --accent-soft: #3a2142; }
+
+body { line-height: 1.6; }
+h1, h2, .fc .q, .brand { font-family: var(--serif); }
+h1 { font-size: 2.05rem; line-height: 1.12; font-weight: 700; letter-spacing: -.012em; margin: 0 0 .7rem; }
+h2 { font-size: 1.32rem; line-height: 1.25; font-weight: 700; margin: 2.4rem 0 .6rem; }
+h3 { font-size: 1rem; }
+main { padding-top: 2.2rem; }
+main section + section { margin-top: 2.2rem; }
+p, li { max-width: 68ch; }
+table p, table li, .two p, .two li, .card p, .msg { max-width: none; }
+
+/* Intestazione: una riga per l'identità e la scelta del compitino, una per le sezioni */
+header.top { background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 2px 0 var(--accent); }
+header.top .bar { padding-top: .7rem; padding-bottom: .5rem; }
+.brand { font-size: 1.15rem; display: inline-flex; align-items: center; gap: .55rem; letter-spacing: -.01em; }
+.mark { display: inline-grid; grid-template-columns: repeat(4, 7px); gap: 2px; }
+.mark i { height: 16px; border: 1.5px solid var(--text); border-radius: 1.5px; }
+.mark i:nth-child(1), .mark i:nth-child(3) { background: var(--accent); border-color: var(--accent); }
+nav.main { gap: 0; margin-left: -.6rem; }
+nav.main a { border-radius: 0; padding: .45rem .7rem .6rem; border-bottom: 3px solid transparent; margin-bottom: -.5rem; }
+nav.main a:hover { color: var(--text); }
+nav.main a[aria-current="page"] { background: none; color: var(--text); border-bottom-color: var(--accent); }
+.phase { border-color: var(--line); border-radius: 6px; }
+.phase button { padding: .4rem .9rem; }
+.phasetag { font-size: .85rem; font-weight: 600; color: var(--accent); margin: 0 0 .5rem; }
+
+/* Pulsanti e campi */
+button, .btn { border-radius: 6px; border-color: var(--line); padding: .55rem 1rem; }
+button.primary, .btn.primary { box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 70%, #000); }
+button.primary:active, .btn.primary:active { transform: translateY(1px); box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 70%, #000); }
+input, select, textarea { border-radius: 5px; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+kbd { background: var(--bg); }
+button.primary kbd { background: transparent; color: var(--accent-text); border-color: color-mix(in srgb, var(--accent-text) 50%, transparent); }
+
+/* Registro dei giorni: l'elemento caratteristico della pagina iniziale */
+.reg { list-style: none; display: flex; flex-wrap: wrap; gap: 0; padding: 0; margin: 1.4rem 0 .5rem; }
+.reg li { margin: 0 -1.5px 6px 0; text-align: center; max-width: none; }
+.reg .ix { display: block; font-family: var(--mono); font-size: .72rem; color: var(--muted); padding-bottom: .25rem; }
+.reg .cell { display: grid; place-items: center; width: 3.1rem; height: 3.6rem; border: 1.5px solid var(--text); background: var(--surface); font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.reg li:first-child .cell { border-radius: 6px 0 0 6px; } .reg li:last-child .cell { border-radius: 0 6px 6px 0; }
+.reg .done .cell { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.reg .miss .cell { background: repeating-linear-gradient(135deg, var(--surface) 0 5px, var(--soft) 5px 10px); color: var(--muted); }
+.reg .today .cell { outline: 3px solid var(--accent); outline-offset: 3px; position: relative; z-index: 1; font-weight: 700; }
+.reg .today .ix { color: var(--accent); font-weight: 700; }
+.reg .exam .cell { background: var(--text); color: var(--bg); border-color: var(--text); }
+.reg .exam .ix { color: var(--text); font-weight: 700; }
+.regcap { margin-top: 0; }
+
+/* Numeri del giorno: una riga, non quattro schede */
+.stats { display: flex; flex-wrap: wrap; margin: 1.6rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stats div { flex: 1 1 9rem; padding: .8rem 1rem .9rem 0; }
+.stats div + div { padding-left: 1rem; border-left: 1px solid var(--line); }
+.stats dt { font-size: .85rem; color: var(--muted); }
+.stats dd { margin: 0; font-family: var(--serif); font-size: 2rem; line-height: 1.1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stats dd small { font-family: var(--sans); font-size: .85rem; font-weight: 400; color: var(--muted); }
+@media (max-width: 34rem) { .stats div { flex-basis: 45%; } .stats div:nth-child(3) { border-left: 0; padding-left: 0; } .reg .cell { width: 2.5rem; height: 3rem; } }
+
+/* Mappa di memoria degli argomenti: ogni blocco si riempie da sinistra */
+.memmap { list-style: none; padding: 0; margin: .8rem 0 .4rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr)); gap: 0; border: 1.5px solid var(--text); border-radius: 6px; overflow: hidden; background: var(--line); gap: 1px; }
+.memmap li { margin: 0; max-width: none; }
+.memmap a { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; padding: .7rem .8rem; text-decoration: none; color: var(--text); height: 100%;
+  background: linear-gradient(90deg, var(--accent-soft) var(--fill), var(--surface) var(--fill)); }
+.memmap a:hover .name { text-decoration: underline; }
+.memmap .lvl { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.memmap .m-bad .lvl { color: var(--bad); } .memmap .m-ok .lvl { color: var(--ok); }
+
+/* Schede, messaggi, tabelle: meno scatole, più gerarchia */
+.card { border-radius: 6px; border-color: var(--line); padding: 1.2rem 1.3rem; }
+.tile { border-radius: 6px; }
+.tile b { font-family: var(--serif); font-size: 1.8rem; }
+.msg { border-left-width: 3px; border-radius: 0 4px 4px 0; }
+.badge { border-radius: 4px; padding: .1rem .45rem; }
+th { font-size: .85rem; border-bottom: 1.5px solid var(--text); color: var(--text); }
+table.mem th, table.pipe th { border-bottom: 0; }
+.formula { border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; background: var(--surface); }
+.src { border-top: 1px dotted var(--line); padding-top: .4rem; margin-top: 1rem; }
+td .src, .msg .src, .card .src { border: 0; padding: 0; margin: 0; }
+
+/* Flashcard: la domanda è il titolo della pagina */
+.fc { border: 1.5px solid var(--text); border-radius: 6px; padding: 1.6rem 1.6rem 1.3rem; box-shadow: 6px 6px 0 var(--accent-soft); }
+.fc .q { font-size: 1.5rem; line-height: 1.25; font-weight: 700; margin: 0 0 1.1rem; max-width: none; }
+.fc .a { border-top: 1.5px solid var(--text); }
+.fc .a > p:first-child { font-size: 1.08rem; }
+.conf button { width: 2.8rem; height: 2.8rem; padding: 0; font-family: var(--mono); font-size: 1rem; }
+.progress { height: 4px; border-radius: 0; background: var(--line); }
+
+figure svg { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: .6rem; }
+figure.scroll svg { border: 0; background: none; padding: 0; }
+.clock { border: 1.5px solid var(--text); border-radius: 6px; font-family: var(--mono); }
+.day { border-top: 1px solid var(--line); padding: 1rem 0; }
+.day h3 { font-family: var(--serif); font-size: 1.1rem; }
+.fc .a:focus { outline: none; }
+.memmap li:last-child { grid-column-end: -1; }
+@media (max-width: 34rem) {
+  .reg { flex-wrap: nowrap; overflow-x: auto; padding: 6px 4px 4px; margin-left: -4px; }
+  .reg li { flex: 1 0 1.9rem; }
+  .reg .cell { width: 100%; font-size: .9rem; }
+  .reg .ix { font-size: .62rem; }
+  h1 { font-size: 1.7rem; }
+}

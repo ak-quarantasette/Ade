@@ -31,7 +31,7 @@
   const examDate = () => state.settings[phaseInfo().dateKey];
   // Carte "attive": quelle degli argomenti già aperti (pre-test fatto) o già viste almeno una volta.
   const activeCards = () => phaseCards().filter((c) => state.pretest[c.topic] || (state.items[c.id] && state.items[c.id].last));
-  const phaseTag = () => '<p class="phasetag"><span class="badge s-phase' + phase() + '">' + phaseInfo().title + '</span></p>';
+  const phaseTag = () => '<p class="phasetag">' + phaseInfo().title + '</p>';
   const dateIt = (s) => new Date(s + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
   const $ = (sel, el) => (el || main).querySelector(sel);
   const $$ = (sel, el) => [...(el || main).querySelectorAll(sel)];
@@ -81,19 +81,49 @@
         : left > 0 ? 'Mancano <strong>' + left + ' giorni</strong> al ' + phaseInfo().title.toLowerCase() + ' (' + dateIt(date) + ').'
         : 'La data del ' + phaseInfo().title.toLowerCase() + ' è passata. ' + (phase() === 1 ? 'Passa al secondo compitino con il selettore in alto.' : 'Aggiornala in Dati.')) + '</p>' +
       (storageOk ? '' : '<p class="msg warn">Il browser non permette di salvare i dati (navigazione privata?). I progressi di questa sessione andranno persi: esporta il JSON da Dati prima di chiudere.</p>') +
-      '<div class="tiles">' +
-        '<div class="tile"><b>' + q.due.length + '</b><span>carte in scadenza</span></div>' +
-        '<div class="tile"><b>' + q.fresh.length + '</b><span>carte nuove oggi (su ' + q.freshTotal + ' mai viste)</span></div>' +
-        '<div class="tile"><b>' + errDue + '</b><span>errori da riprovare</span></div>' +
-        '<div class="tile"><b>' + ST.streak(state, t) + '</b><span>giorni di fila</span></div>' +
-        '<div class="tile"><b>' + pct(acc) + '</b><span>accuratezza in questa parte</span></div>' +
-      '</div>' +
+      dayRegister(t, date) +
+      '<dl class="stats">' +
+        '<div><dt>carte in scadenza</dt><dd>' + q.due.length + '</dd></div>' +
+        '<div><dt>carte nuove oggi</dt><dd>' + q.fresh.length + '<small> di ' + q.freshTotal + '</small></dd></div>' +
+        '<div><dt>errori da riprovare</dt><dd>' + errDue + '</dd></div>' +
+        '<div><dt>accuratezza</dt><dd>' + pct(acc) + '</dd></div>' +
+      '</dl>' +
       '<div class="row"><a class="btn primary" href="#/ripasso">Inizia il ripasso (' + (q.due.length + q.fresh.length) + ')</a>' +
         (errDue ? '<a class="btn" href="#/errori">Quaderno degli errori</a>' : '') + '<a class="btn" href="#/mappa">Argomenti (' + ready + ')</a></div>' +
       '<p class="small muted">Le carte nuove sono quelle degli argomenti che hai già aperto dalla Mappa: prima il pre-test e la spiegazione, poi le carte.</p>' +
+      memoryMap() +
       (genDue.length ? '<h2>Esercizi da fare oggi</h2><ul>' + genDue.map((g) => '<li><a href="#/es/' + g.sub + '">' + g.title + '</a> <span class="muted small">' + g.desc + '</span></li>').join('') + '</ul>' : '') +
       (day ? '<h2>Piano di oggi</h2><ol>' + day.blocks.map(blockLi).join('') + '</ol><p class="small muted">Totale ' + day.total + ' minuti, a blocchi brevi con pause. <a href="#/piano">Piano completo</a></p>' : '');
   }
+  /**
+   * I giorni fino al compitino come celle di un registro: sopra ogni cella i giorni che mancano
+   * (come gli indici dei bit), dentro il giorno del mese; piena se quel giorno hai studiato.
+   */
+  function dayRegister(t, date) {
+    if (!date || U.diffDays(t, date) < 0) return '';
+    const studied = new Set(state.reviews.map((r) => r.d));
+    const first = state.reviews.length ? state.reviews.reduce((m, r) => (r.d < m ? r.d : m), t) : t;
+    const start = U.diffDays(first, date) > 20 ? U.addDays(date, -20) : first;
+    const n = U.diffDays(start, date);
+    if (n > 27) return '';
+    let cells = '';
+    for (let i = 0; i <= n; i++) {
+      const d = U.addDays(start, i), left = n - i, isExam = left === 0, past = U.diffDays(d, t) > 0, isToday = d === t;
+      const cls = isExam ? 'exam' : studied.has(d) ? 'done' : past ? 'miss' : '';
+      const label = dateIt(d) + ': ' + (isExam ? 'compitino' : studied.has(d) ? 'studiato' : past ? 'nessuna risposta registrata' : isToday ? 'oggi, ancora niente' : 'da fare');
+      cells += '<li class="' + cls + (isToday ? ' today' : '') + '" title="' + label + '"><span class="ix">' + (isExam ? 'esame' : left) + '</span><span class="cell" aria-label="' + label + '">' + Number(d.slice(8)) + '</span></li>';
+    }
+    return '<ol class="reg" aria-label="Giorni fino al compitino">' + cells + '</ol><p class="small muted regcap">Una cella per giorno, con sopra quanti ne mancano. Si riempie nei giorni in cui rispondi ad almeno una domanda.</p>';
+  }
+
+  /** Gli argomenti della parte come mappa di memoria: ogni blocco si riempie con la ritenzione stimata. */
+  function memoryMap() {
+    const list = course.topicsOf(phase());
+    return '<h2>Argomenti</h2><ul class="memmap">' + list.map((x) => { const s = status(x.id), v = s.m.seen ? Math.round(s.m.value * 100) : 0;
+      return '<li><a href="#/arg/' + x.id + '" class="m-' + s.cls + '" style="--fill:' + v + '%"><span class="name">' + esc(x.short) + '</span><span class="lvl">' + (s.m.seen ? v + '%' : '–') + '</span></a></li>'; }).join('') +
+      '</ul><p class="small muted">Il riempimento è la ritenzione stimata delle carte dell\'argomento: cala da sola se non ripassi.</p>';
+  }
+
   const blockHref = (b) => ({ ripasso: '#/ripasso', nuovo: '#/arg/' + b.topic, esercizi: '#/es', errori: '#/errori', simulazione: '#/esame', aperte: '#/aperte' }[b.type]);
   const blockLi = (b) => '<li><a href="' + blockHref(b) + '">' + esc(b.title) + '</a> <span class="muted small">' + b.min + ' min</span></li>';
   function buildPlan() {
